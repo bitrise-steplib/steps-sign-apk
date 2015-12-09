@@ -2,9 +2,9 @@ title: "Sign APK"
 summary: Sign APK
 description: |-
   Sign APK.
-website: https://github.com/godrei/steps-android-sign
-source_code_url: https://github.com/godrei/steps-android-sign
-support_url: https://github.com/godrei/steps-android-sign/issues
+website: https://github.com/bitrise-steplib/steps-sign-apk
+source_code_url: https://github.com/bitrise-steplib/steps-sign-apk
+support_url: https://github.com/bitrise-steplib/steps-sign-apk/issues
 host_os_tags:
   - osx-10.10
 project_type_tags: []
