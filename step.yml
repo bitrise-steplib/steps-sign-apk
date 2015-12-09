@@ -59,4 +59,4 @@ inputs:
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
-    title: ""
+    title: "Bitrise signed apk path"
