@@ -1,0 +1,14 @@
+format_version: 1.0.0
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+workflows:
+  test:
+    steps:
+    - path::./:
+        title: Step Test
+        inputs:
+        - apk_path: $APK_PATH
+        - keystore_url: $KEYSTORE_URL
+        - keystore_password: $KEYSTORE_PASSWORD
+        - keystore_alias: $KEYSTORE_ALIAS
+        - private_key_password: $PRIVATE_KEY_PASSWORD
