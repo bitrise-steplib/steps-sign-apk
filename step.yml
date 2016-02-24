@@ -56,6 +56,14 @@ inputs:
       is_expand: true
       is_required: true
       is_dont_change_value: false
+  - jarsigner_options:
+    opts:
+      title: "Additional options for jarsigner"
+      summary: ""
+      description: ""
+      is_expand: true
+      is_required: false
+      is_dont_change_value: false
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
