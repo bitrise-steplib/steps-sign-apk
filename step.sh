@@ -39,7 +39,7 @@ if [[ "${keystore_url}" == ${file_prefix}* ]] ; then
 	keystore_path=${keystore_url#$file_prefix}
 else
 	echo
-	printf "\e[34mDownloading keystore: \e[0m${keystore_url}\n"
+	printf "\e[34mDownloading keystore\e[0m\n"
 
 	tmp_dir=$(mktemp -d)
 	keystore_path="${tmp_dir}/keystore.jks"
