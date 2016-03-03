@@ -2,6 +2,8 @@ format_version: 1.0.0
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 workflows:
+  # ----------------------------------------------------------------
+  # --- workflow to Test this Step
   test:
     steps:
     - path::./:
@@ -15,7 +17,38 @@ workflows:
 
 
   # ----------------------------------------------------------------
-  # --- workflows to Share this step into a Step Library
+  # --- workflow to Create Release with auto version bump
+  create-release:
+    steps:
+    - script:
+        title:
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+
+            export CI=true
+            releaseman create --bump-version patch
+
+  # ----------------------------------------------------------------
+  # --- workflow to Create Release Version
+  create-release-version:
+    envs:
+    - RELEASE_VERSION: 0.9.3
+    steps:
+    - script:
+        title:
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+
+            export CI=true
+            releaseman create --version $RELEASE_VERSION
+
+
+  # ----------------------------------------------------------------
+  # --- workflow to Share this step into a Step Library
   share-this-step:
     envs:
       # if you want to share this step into a StepLib
