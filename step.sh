@@ -59,10 +59,11 @@ tmp_signed_apk_path="${dir_name}/tmp_signed-${file_name}"
 
 jarsigner="/usr/bin/jarsigner"
 "${jarsigner}" \
-  -keystore "${keystore_path}" \
-  -storepass "${keystore_password}" \
+	-keystore "${keystore_path}" \
+	-storepass "${keystore_password}" \
+	-keypass "${private_key_password}" \
 	${jarsigner_options} \
-  -signedjar "${tmp_signed_apk_path}" "${apk_path}" "${keystore_alias}"
+	-signedjar "${tmp_signed_apk_path}" "${apk_path}" "${keystore_alias}"
 
 #
 # Now zipalign it.
