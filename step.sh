@@ -2,8 +2,6 @@
 
 THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-set -e
-
 #
 # Input validation
 if [ -z "${apk_path}" ] ; then
@@ -82,8 +80,10 @@ ${zipalign} -f 4 ${tmp_signed_apk_path} ${signed_apk_path}
 # Verifying
 echo "  Verifying the signed APK"
 out=$(${jarsigner} -verify -verbose -certs ${signed_apk_path})
-if [[ "$out" != *"jar verified."* ]] ; then
-	printf "\e[31mError: Failed to sign APK\e[0m\n"
+if [[ $out =~ .*"jar verified".* ]] ; then
+  echo "  APK verified"
+else
+	printf "\e[31mAPK NOT verified\n"
 	exit 1
 fi
 
