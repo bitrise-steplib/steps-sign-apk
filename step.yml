@@ -15,14 +15,12 @@ is_requires_admin_user: false
 is_always_run: false
 is_skippable: false
 inputs:
-  - apk_path:
+  - apk_path: "$BITRISE_APK_PATH"
     opts:
       title: "apk path"
       summary: ""
       description: ""
-      is_expand: true
       is_required: true
-      is_dont_change_value: false
   - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_URL
     opts:
       title: "Keystore url"
@@ -30,41 +28,30 @@ inputs:
       description: |-
         For remote keystores you can provide any download location (ex: https://URL/TO/keystore.jks).
         For local keystores provide file path url. (ex: file://PATH/TO/keystore.jks).
-      is_expand: true
       is_required: true
-      is_dont_change_value: false
   - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
     opts:
       title: "Keystore password"
       summary: ""
       description: ""
-      is_expand: true
       is_required: true
-      is_dont_change_value: false
   - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
     opts:
       title: "Keystore alias"
       summary: ""
       description: ""
-      is_expand: true
       is_required: true
-      is_dont_change_value: false
   - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
     opts:
       title: "Private key password"
       summary: ""
       description: ""
-      is_expand: true
       is_required: true
-      is_dont_change_value: false
   - jarsigner_options:
     opts:
       title: "Additional options for jarsigner"
       summary: ""
       description: ""
-      is_expand: true
-      is_required: false
-      is_dont_change_value: false
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
