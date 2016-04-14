@@ -1,6 +1,15 @@
 format_version: 1.0.0
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
+app:
+  envs:
+  # define these in your .bitrise.secrets.yml
+  - BITRISE_APK_PATH: $BITRISE_APK_PATH
+  - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
+  - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+  - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+
 workflows:
   # ----------------------------------------------------------------
   # --- workflow to Test this Step
@@ -8,13 +17,6 @@ workflows:
     steps:
     - path::./:
         title: Step Test
-        inputs:
-        - apk_path: $APK_PATH
-        - keystore_url: $KEYSTORE_URL
-        - keystore_password: $KEYSTORE_PASSWORD
-        - keystore_alias: $KEYSTORE_ALIAS
-        - private_key_password: $PRIVATE_KEY_PASSWORD
-
 
   # ----------------------------------------------------------------
   # --- workflow to Create Release with auto version bump
