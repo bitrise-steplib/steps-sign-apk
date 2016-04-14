@@ -1,6 +1,12 @@
-## Changelog (Current version: 0.9.4)
+## Changelog (Current version: 0.9.5)
 
 -----------------
+
+### 0.9.5 (2016 Apr 14)
+
+* [b2a027e] Merge pull request #8 from bitrise-steplib/fix
+* [c017aaf] log improvements
+* [016b094] verify fix
 
 ### 0.9.4 (2016 Mar 03)
 
@@ -26,4 +32,4 @@
 
 -----------------
 
-Updated: 2016 Mar 03
+Updated: 2016 Apr 14
