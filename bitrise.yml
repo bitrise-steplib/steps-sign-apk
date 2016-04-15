@@ -3,8 +3,13 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
+  - BITRISE_PROJECT_PATH: build.gradle
+  - GRADLE_TASK: assembleDebug
+  - GRADLEW_PATH: "./gradlew"
+  - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-samples/android-sdk22-code-sign.git
+  - SAMPLE_APP_CLONE_INTO_DIR: "_tmp/android-sdk22-code-sign"
+
   # define these in your .bitrise.secrets.yml
-  - BITRISE_APK_PATH: $BITRISE_APK_PATH
   - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
   - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
   - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
@@ -15,6 +20,29 @@ workflows:
   # --- workflow to Test this Step
   test:
     steps:
+    - script:
+        inputs:
+        - content: rm -rf $SAMPLE_APP_CLONE_INTO_DIR
+    - script:
+        title: Git clone sample app
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+            set -x
+
+            git clone $SAMPLE_APP_REPOSITORY_URL $SAMPLE_APP_CLONE_INTO_DIR
+    - change-workdir:
+        title: Switch working dir
+        run_if: true
+        inputs:
+        - path: "$SAMPLE_APP_CLONE_INTO_DIR"
+        - is_create_path: false
+    - gradle-runner@1.3.1:
+        inputs:
+        - gradle_file: "$BITRISE_PROJECT_PATH"
+        - gradle_task: "$GRADLE_TASK"
+        - gradlew_path: "$GRADLEW_PATH"
     - path::./:
         title: Step Test
 
