@@ -1,0 +1,21 @@
+{
+	"ImportPath": "github.com/bitrise-io/sign-apk",
+	"GoVersion": "go1.6",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/cmdex",
+			"Rev": "873d35c6b6e0db94f60666a966b732b1ff6c6aa2"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
+			"Rev": "873d35c6b6e0db94f60666a966b732b1ff6c6aa2"
+		},
+		{
+			"ImportPath": "github.com/kballard/go-shellquote",
+			"Rev": "d8ec1a69a250a17bb0e419c386eac1f3711dc142"
+		}
+	]
+}
