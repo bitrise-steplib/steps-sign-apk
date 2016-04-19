@@ -71,12 +71,12 @@ func aptGetInstall(tool string) error {
 	return cmdex.RunCommand("apt-get", "install", tool)
 }
 
-func isToolInstalled(tool string) (bool, error) {
+func isToolInstalled(tool string) bool {
 	toolPath, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr("which", tool)
 	if err != nil {
-		return false, err
+		return false
 	}
-	return (toolPath != ""), nil
+	return (toolPath != "")
 }
 
 func ensureZipInstalled() error {
