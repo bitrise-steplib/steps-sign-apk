@@ -87,7 +87,7 @@ func ensureZipInstalled() error {
 
 	tools := []string{"zip", "unzip"}
 	for _, tool := range tools {
-		if installed, err := isToolInstalled(tool); err != nil {
+		if installed := isToolInstalled(tool); err != nil {
 			return err
 		} else if !installed {
 			if osName == "Darwin" {
