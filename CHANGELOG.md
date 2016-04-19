@@ -1,6 +1,15 @@
-## Changelog (Current version: 0.9.5)
+## Changelog (Current version: 0.9.6)
 
 -----------------
+
+### 0.9.6 (2016 Apr 19)
+
+* [3d26488] prepare for release
+* [1e7d8fb] Merge pull request #10 from bitrise-steplib/installed_tool_check
+* [bf5cdf0] check for installed tool fix
+* [ed78e56] is tool installed check fix
+* [edfad85] Merge pull request #9 from bitrise-steplib/go
+* [cb0fb3f] remove exist sign infos
 
 ### 0.9.5 (2016 Apr 14)
 
@@ -32,4 +41,4 @@
 
 -----------------
 
-Updated: 2016 Apr 14
+Updated: 2016 Apr 19
