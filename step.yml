@@ -47,11 +47,12 @@ inputs:
       summary: ""
       description: ""
       is_required: true
-  - jarsigner_options:
+  - jarsigner_options: ""
     opts:
       title: "Additional options for jarsigner"
       summary: ""
-      description: ""
+      description: |
+        __deprecated!__ jarsigner options are detected from the keystore
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:

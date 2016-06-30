@@ -1,2 +1,4 @@
 .bitrise.secrets.yml
 _tmp
+go/bin/
+go/pkg/

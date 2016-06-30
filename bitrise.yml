@@ -21,6 +21,30 @@ workflows:
   test:
     steps:
     - script:
+        title: Print go environment
+        inputs:
+        - content: |-
+            set -x
+            go version
+            echo $GO15VENDOREXPERIMENT
+    - script:
+        title: Export GOPATH
+        inputs:
+        - content: |-
+            set -x
+            envman add --key GOPATH --value "$BITRISE_SOURCE_DIR/go"
+    - script:
+        title: "Go Test"
+        inputs:
+        - working_dir: $BITRISE_SOURCE_DIR/go/src/github.com/bitrise-io/sign-apk
+        - content: |
+            set -ex
+            go test ./...
+    - script:
+        title: Step audit
+        inputs:
+        - content: stepman audit --step-yml=./step.yml
+    - script:
         inputs:
         - content: rm -rf $SAMPLE_APP_CLONE_INTO_DIR
     - script:
