@@ -88,7 +88,7 @@ workflows:
   # --- workflow to Create Release Version
   create-release-version:
     envs:
-    - RELEASE_VERSION: 0.9.6
+    - RELEASE_VERSION: 0.9.7
     steps:
     - script:
         title:
@@ -100,7 +100,6 @@ workflows:
             export CI=true
             releaseman create --version $RELEASE_VERSION
 
-
   # ----------------------------------------------------------------
   # --- workflow to Share this step into a Step Library
   share-this-step:
@@ -108,7 +107,7 @@ workflows:
       # if you want to share this step into a StepLib
       - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
       - STEP_ID_IN_STEPLIB: sign-apk
-      - STEP_GIT_VERION_TAG_TO_SHARE: 0.9.6
+      - STEP_GIT_VERION_TAG_TO_SHARE: 0.9.7
       - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-sign-apk.git
     description: |-
       If this is the first time you try to share a Step you should
