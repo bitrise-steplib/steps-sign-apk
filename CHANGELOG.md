@@ -1,6 +1,12 @@
-## Changelog (Current version: 0.9.7)
+## Changelog (Current version: 0.9.8)
 
 -----------------
+
+### 0.9.8 (2016 Jul 01)
+
+* [027cbad] prepare for 0.9.8
+* [fce016c] Merge pull request #14 from bitrise-steplib/cleanup
+* [2cb5d84] reoved unused functions, added more tests
 
 ### 0.9.7 (2016 Jul 01)
 
