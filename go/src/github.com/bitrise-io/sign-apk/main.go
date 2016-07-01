@@ -1,58 +1,37 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/pathutil"
-	shellquote "github.com/kballard/go-shellquote"
+	"github.com/bitrise-io/sign-apk/keystore"
+	log "github.com/bitrise-io/sign-apk/logger"
+	"github.com/bitrise-io/sign-apk/run"
+	version "github.com/hashicorp/go-version"
 )
 
 const jarsigner = "/usr/bin/jarsigner"
+
+var signingFileExts = []string{".mf", ".rsa", ".dsa", ".ec", ".sf"}
 
 // -----------------------
 // --- Functions
 // -----------------------
 
-func logFail(format string, v ...interface{}) {
-	errorMsg := fmt.Sprintf(format, v...)
-	fmt.Printf("\x1b[31;1m%s\x1b[0m\n", errorMsg)
-	os.Exit(1)
-}
-
-func logWarn(format string, v ...interface{}) {
-	errorMsg := fmt.Sprintf(format, v...)
-	fmt.Printf("\x1b[33;1m%s\x1b[0m\n", errorMsg)
-}
-
-func logInfo(format string, v ...interface{}) {
-	fmt.Println()
-	errorMsg := fmt.Sprintf(format, v...)
-	fmt.Printf("\x1b[34;1m%s\x1b[0m\n", errorMsg)
-}
-
-func logDetails(format string, v ...interface{}) {
-	errorMsg := fmt.Sprintf(format, v...)
-	fmt.Printf("  %s\n", errorMsg)
-}
-
-func logDone(format string, v ...interface{}) {
-	errorMsg := fmt.Sprintf(format, v...)
-	fmt.Printf("  \x1b[32;1m%s\x1b[0m\n", errorMsg)
-}
-
-func validateRequiredInput(key string) string {
-	value := os.Getenv(key)
+func validateRequiredInput(key, value string) {
 	if value == "" {
-		logFail("missing required input: %s", key)
+		log.Fail("Missing required input: %s", key)
 	}
-	return value
 }
 
 func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
@@ -109,14 +88,14 @@ func download(url, pth string) error {
 	out, err := os.Create(pth)
 	defer func() {
 		if err := out.Close(); err != nil {
-			logWarn("Failed to close file: %s, err: %s", out, err)
+			log.Warn("Failed to close file: %s, error: %s", out, err)
 		}
 	}()
 
 	resp, err := http.Get(url)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			logWarn("Failed to close response body, err: %s", err)
+			log.Warn("Failed to close response body, error: %s", err)
 		}
 	}()
 	if err != nil {
@@ -127,188 +106,248 @@ func download(url, pth string) error {
 	return err
 }
 
-func jarsignerSign(keystore, storePass, keyPass, optionsStr, signedApk, apk, keystoreAlias string) error {
-	args := []string{
-		"-keystore", keystore,
-		"-storepass", storePass,
-		"-keypass", keyPass,
+func fileList(searchDir string) ([]string, error) {
+	fileList := []string{}
+
+	if err := filepath.Walk(searchDir, func(path string, f os.FileInfo, err error) error {
+		fileList = append(fileList, path)
+		return err
+	}); err != nil {
+		return []string{}, err
 	}
-	if optionsStr != "" {
-		options, err := shellquote.Split(optionsStr)
+
+	return fileList, nil
+}
+
+func latestBuildToolsDir(androidHome string) (string, error) {
+	buildTools := filepath.Join(androidHome, "build-tools")
+	pattern := filepath.Join(buildTools, "*")
+
+	buildToolsDirs, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", err
+	}
+
+	var latestVersion version.Version
+	for _, buildToolsDir := range buildToolsDirs {
+		versionStr := strings.TrimPrefix(buildToolsDir, buildTools+"/")
+
+		version, err := version.NewVersion(versionStr)
 		if err != nil {
-			return err
+			return "", err
 		}
 
-		args = append(args, options...)
+		if latestVersion.String() == "" || version.GreaterThan(&latestVersion) {
+			latestVersion = *version
+		}
 	}
-	args = append(args, "-signedjar", signedApk, apk, keystoreAlias)
 
-	return cmdex.RunCommand(jarsigner, args...)
+	if latestVersion.String() == "" {
+		return "", errors.New("failed to find latest build-tools dir")
+	}
+
+	return filepath.Join(buildTools, latestVersion.String()), nil
 }
 
-func exportLatestZipalign() (string, error) {
-	thisScriptDir := os.Getenv("THIS_SCRIPT_DIR")
-
-	exportScriptPth := path.Join(thisScriptDir, "export_latest_zipalign.rb")
-	return cmdex.RunCommandAndReturnCombinedStdoutAndStderr("ruby", exportScriptPth)
-}
-
-func zipalign(tmpSignedApk, signedApk string) error {
-	zipalign, err := exportLatestZipalign()
+func listFilesInAPK(aapt, pth string) ([]string, error) {
+	cmdSlice := []string{aapt, "list", pth}
+	out, err := run.ExecuteForOutput(cmdSlice)
 	if err != nil {
-		fmt.Printf("zipalign err: %s\n", zipalign)
+		return []string{}, err
+	}
+
+	return strings.Split(out, "\n"), nil
+}
+
+func filterMETAFiles(fileList []string) []string {
+	metaFiles := []string{}
+	for _, file := range fileList {
+		if strings.HasPrefix(file, "META-INF/") {
+			metaFiles = append(metaFiles, file)
+		}
+	}
+	return metaFiles
+}
+
+func filterSigningFiles(fileList []string) []string {
+	signingFiles := []string{}
+	for _, file := range fileList {
+		ext := filepath.Ext(file)
+		for _, signExt := range signingFileExts {
+			if strings.ToLower(ext) == strings.ToLower(signExt) {
+				signingFiles = append(signingFiles, file)
+			}
+		}
+	}
+	return signingFiles
+}
+
+func removeFilesFromAPK(aapt, pth string, files []string) error {
+	cmdSlice := append([]string{aapt, "remove", pth}, files...)
+
+	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
+	log.Details("=> %s", prinatableCmd)
+
+	out, err := run.ExecuteForOutput(cmdSlice)
+	if err != nil && errorutil.IsExitStatusError(err) {
+		return errors.New(out)
+	}
+	return err
+}
+
+func unsignAPK(aapt, pth string) error {
+	filesInAPK, err := listFilesInAPK(aapt, pth)
+	if err != nil {
 		return err
 	}
 
-	return cmdex.RunCommand(zipalign, "-f", "4", tmpSignedApk, signedApk)
-}
+	metaFiles := filterMETAFiles(filesInAPK)
+	signingFiles := filterSigningFiles(metaFiles)
 
-func jarsignerVerify(signedAPK string) (bool, error) {
-	out, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr(jarsigner, "-verify", "-verbose", "-certs", signedAPK)
-	if err != nil {
-		return false, err
+	if len(signingFiles) == 0 {
+		log.Details("APK is not signed")
+		return nil
 	}
 
-	return strings.Contains(out, "jar verified"), nil
+	return removeFilesFromAPK(aapt, pth, signingFiles)
 }
 
-func zip(targetDir, targetRelPathToZip, zipPath string) error {
-	zipCmd := exec.Command("zip", "-rTy", zipPath, targetRelPathToZip)
-	zipCmd.Dir = targetDir
-	if out, err := zipCmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("Zip failed, out: %s, err: %#v", out, err)
-	}
-	return nil
-}
+func zipalignAPK(zipalign, pth, dstPth string) error {
+	cmdSlice := []string{zipalign, "-f", "4", pth, dstPth}
 
-func unZip(zipDir, zipName, unzipPath string) error {
-	zipCmd := exec.Command("unzip", zipName, "-d", unzipPath)
-	zipCmd.Dir = zipDir
-	if out, err := zipCmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("Zip failed, out: %s, err: %#v", out, err)
-	}
-	return nil
+	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
+	log.Details("=> %s", prinatableCmd)
+
+	_, err := run.ExecuteForOutput(cmdSlice)
+	return err
 }
 
 // -----------------------
 // --- Main
 // -----------------------
 func main() {
+
 	//
 	// Validate options
-	logInfo("Configs:")
-	logDetails("apk_path: %s", os.Getenv("apk_path"))
-	logDetails("keystore_url: %s", "***")
-	logDetails("keystore_password: %s", "***")
-	logDetails("keystore_alias: %s", "***")
-	logDetails("private_key_password: %s", "***")
-	logDetails("jarsigner_options: %s", os.Getenv("jarsigner_options"))
-
-	apkPath := validateRequiredInput("apk_path")
-	keystoreURL := validateRequiredInput("keystore_url")
-	keystorePassword := validateRequiredInput("keystore_password")
-	keystoreAlias := validateRequiredInput("keystore_alias")
-	privateKeyPassword := validateRequiredInput("private_key_password")
+	apkPath := os.Getenv("apk_path")
+	keystoreURL := os.Getenv("keystore_url")
+	keystorePassword := os.Getenv("keystore_password")
+	keystoreAlias := os.Getenv("keystore_alias")
+	privateKeyPassword := os.Getenv("private_key_password")
 	jarsignerOptions := os.Getenv("jarsigner_options")
 
+	log.Configs(apkPath, keystoreURL, keystorePassword, keystoreAlias, privateKeyPassword, jarsignerOptions)
+
+	if jarsignerOptions != "" {
+		fmt.Println("")
+		log.Warn("jarsigner_options is deprecated, options are detected from the keystore")
+	}
+
+	validateRequiredInput("apk_path", apkPath)
+	validateRequiredInput("keystore_url", keystoreURL)
+	validateRequiredInput("keystore_password", keystorePassword)
+	validateRequiredInput("keystore_alias", keystoreAlias)
+	validateRequiredInput("private_key_password", privateKeyPassword)
+	fmt.Println("")
+
+	//
+	// Prepare paths
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-apk")
 	if err != nil {
-		logFail("Failed to create tmp dir, err: %s", err)
+		log.Fail("Failed to create tmp dir, error: %s", err)
 	}
+	apkDir := path.Dir(apkPath)
+	apkBasenameWithExt := path.Base(apkPath)
+	apkExt := filepath.Ext(apkBasenameWithExt)
+	apkBasename := strings.TrimSuffix(apkBasenameWithExt, apkExt)
 
-	apkBaseNameWithExt := path.Base(apkPath)
-	apkBaseName := strings.TrimSuffix(apkBaseNameWithExt, path.Ext(apkBaseNameWithExt))
-	apkDirName := path.Dir(apkPath)
-
-	// Ensure installed zip and unzip
-	logInfo("Ensure installed zip and unzip")
-	if err := ensureZipInstalled(); err != nil {
-		logFail("Failed to ensure installed zip and upnzi, error: %s", err)
-	}
-	logDetails("zip and unzip tools are installed")
-
+	//
 	// Download keystore
-	logInfo("Download keystore")
 	keystorePath := ""
 	if strings.HasPrefix(keystoreURL, "file://") {
 		pth := strings.TrimPrefix(keystoreURL, "file://")
+		var err error
 		keystorePath, err = pathutil.AbsPath(pth)
 		if err != nil {
-			logFail("Failed to expand path (%s), err: %s", pth, err)
+			log.Fail("Failed to expand path (%s), error: %s", pth, err)
 		}
 	} else {
+		log.Info("Download keystore")
 		keystorePath = path.Join(tmpDir, "keystore.jks")
 		if err := download(keystoreURL, keystorePath); err != nil {
-			logFail("Failed to download keystore, err: %s", err)
+			log.Fail("Failed to download keystore, error: %s", err)
 		}
 	}
-	logDetails("using keystore: %s", keystorePath)
+	log.Details("using keystore at: %s", keystorePath)
+	fmt.Println("")
 
-	// Remove previous sign
-	logInfo("Remove previous sign")
-	tmpApkZIPName := fmt.Sprintf("bitrise-tmp-%s.zip", apkBaseName)
-	tmpApkZIPPath := path.Join(tmpDir, tmpApkZIPName)
-	if err := cmdex.CopyFile(apkPath, tmpApkZIPPath); err != nil {
-		logFail("Failed to copy APK to (%s), err: %s", tmpApkZIPPath, err)
-	}
-	logDetails("tmp APK zip created at: (%s)", tmpApkZIPPath)
-
-	tmpApkUnzipDirName := fmt.Sprintf("bitrise-tmp-%s", apkBaseName)
-	tmpApkUnzipPath := path.Join(tmpDir, tmpApkUnzipDirName)
-	if err := unZip(tmpDir, tmpApkZIPName, tmpApkUnzipDirName); err != nil {
-		logFail("Failed to unzip (%s), err: %s", tmpApkZIPPath, err)
-	}
-	logDetails("tmp APK zip unzipped at: (%s)", tmpApkUnzipPath)
-
-	tmpApkMetaDir := path.Join(tmpApkUnzipPath, "META-INF")
-	if exist, err := pathutil.IsDirExists(tmpApkMetaDir); err != nil {
-		logFail("Failed to check if path (%s) exist, err: %s", tmpApkMetaDir, err)
-	} else if exist {
-		logWarn("APK already signed removing it...")
-		if err := cmdex.RemoveDir(tmpApkMetaDir); err != nil {
-			logFail("Failed to remove META-INF dir (%s), err: %s", tmpApkMetaDir, err)
-		}
-
-		unsignedApkName := fmt.Sprintf("bitrise-unsigned-%s", apkBaseNameWithExt)
-		unsignedApkPath := path.Join(tmpDir, unsignedApkName)
-		if err := zip(tmpDir, tmpApkUnzipDirName, unsignedApkName); err != nil {
-			logFail("Failed to zip (%s), err: %s", unsignedApkPath, err)
-		}
-
-		logDetails("Using unsigned APK (%s)...", unsignedApkPath)
-		apkPath = unsignedApkPath
-	}
-
-	// Sign apk
-	logInfo("Sign APK")
-	signedApkName := fmt.Sprintf("bitrise-signed-%s", apkBaseNameWithExt)
-	tmpSignedApkPath := path.Join(tmpDir, signedApkName)
-	signedApkPath := path.Join(apkDirName, signedApkName)
-	if err := jarsignerSign(keystorePath, keystorePassword, privateKeyPassword, jarsignerOptions, tmpSignedApkPath, apkPath, keystoreAlias); err != nil {
-		logFail("Failed to sign APK, err: %s", err)
-	}
-	logDetails("signed APK: %s", tmpSignedApkPath)
-
-	// Now zipalign it
-	logInfo("Aligning the APK")
-	if err := zipalign(tmpSignedApkPath, signedApkPath); err != nil {
-		logFail("Failed to zipaling APK, err: %s", err)
-	}
-	logDetails("aligned signed APK: %s", signedApkPath)
-
-	// Verifying APK
-	logInfo("Verifying the signed APK")
-	verified, err := jarsignerVerify(signedApkPath)
+	keystore, err := keystore.NewKeystoreModel(keystorePath, keystorePassword, keystoreAlias)
 	if err != nil {
-		logFail("Failed to verify APK, err: %s", err)
+		log.Fail("Failed to create keystore, error: %s", err)
 	}
-	if !verified {
-		logFail("APK not verified, signing failed")
+
+	//
+	// Find Android tools
+	androidHome := os.Getenv("ANDROID_HOME")
+	log.Details("android_home: %s", androidHome)
+
+	latestBuildToolsDir, err := latestBuildToolsDir(androidHome)
+	if err != nil {
+		log.Fail("failed to find latest build-tools")
 	}
+	log.Details("build_tools: %s", latestBuildToolsDir)
+
+	aapt := filepath.Join(latestBuildToolsDir, "aapt")
+	if exist, err := pathutil.IsPathExists(aapt); err != nil {
+		log.Fail("Failed to find aapt path, error: %s", err)
+	} else if !exist {
+		log.Fail("aapt not found at: %s", aapt)
+	}
+	log.Details("aapt: %s", aapt)
+
+	zipalign := filepath.Join(latestBuildToolsDir, "zipalign")
+	if exist, err := pathutil.IsPathExists(zipalign); err != nil {
+		log.Fail("Failed to find zipalign path, error: %s", err)
+	} else if !exist {
+		log.Fail("zipalign not found at: %s", zipalign)
+	}
+	log.Details("zipalign: %s", zipalign)
+
+	//
+	// Resign apk
+	unsignedAPKPth := filepath.Join(tmpDir, "unsigned.apk")
+	cmdex.CopyFile(apkPath, unsignedAPKPth)
+
+	log.Info("Unsign APK if signed")
+	if err := unsignAPK(aapt, unsignedAPKPth); err != nil {
+		log.Fail("Failed to unsign APK, error: %s", err)
+	}
+	log.Done("unsiged")
+
+	unalignedAPKPth := filepath.Join(tmpDir, "unaligned.apk")
+	log.Info("Sign APK")
+	if err := keystore.SignAPK(unsignedAPKPth, unalignedAPKPth, privateKeyPassword); err != nil {
+		log.Fail("Failed to sign APK, error: %s", err)
+	}
+	log.Done("signed")
+
+	log.Info("Verify APK")
+	if err := keystore.VerifyAPK(unalignedAPKPth); err != nil {
+		log.Fail("Failed to verify APK, error: %s", err)
+	}
+	log.Done("verified")
+
+	log.Info("Zipalign APK")
+	signedAPKPth := filepath.Join(apkDir, apkBasename+"bitrise-signed"+apkExt)
+	if err := zipalignAPK(zipalign, unalignedAPKPth, signedAPKPth); err != nil {
+		log.Fail("Failed to zipalign APK, error: %s", err)
+	}
+	log.Done("zipaligned")
 
 	// Exporting signed ipa
-	logDone("Signed APK created at: %s", signedApkPath)
-	if err := exportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedApkPath); err != nil {
-		logWarn("Failed to export APK, err: %s", err)
+	fmt.Println("")
+	log.Done("Signed APK created at: %s", signedAPKPth)
+	if err := exportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedAPKPth); err != nil {
+		log.Warn("Failed to export APK, error: %s", err)
 	}
 }

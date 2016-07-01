@@ -3,13 +3,11 @@ package cmdex
 import (
 	"archive/zip"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/bitrise-io/go-utils/pathutil"
 )
@@ -45,18 +43,14 @@ func UnZIP(src, dest string) error {
 		path := filepath.Join(dest, f.Name)
 
 		if f.FileInfo().IsDir() {
-			fmt.Printf("*** dir path: %s\n", path)
 			if err := os.MkdirAll(path, f.Mode()); err != nil {
 				return err
 			}
-			fmt.Printf("*** ok dir path: %s\n", path)
 		} else {
-			fmt.Printf("*** filr path: %s\n", path)
 			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return err
 			}
-			fmt.Printf("*** ok filr path: %s\n", path)
 			defer func() {
 				if err := f.Close(); err != nil {
 					log.Fatal(err)
@@ -118,79 +112,4 @@ func DownloadAndUnZIP(url, pth string) error {
 	}
 
 	return UnZIP(srcFilePath, pth)
-}
-
-// ZIP ...
-func ZIP(source, target string) error {
-	zipfile, err := os.Create(target)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err := zipfile.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	archive := zip.NewWriter(zipfile)
-	defer func() {
-		if err := archive.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	info, err := os.Stat(source)
-	if err != nil {
-		return nil
-	}
-
-	var baseDir string
-	if info.IsDir() {
-		baseDir = filepath.Base(source)
-	}
-
-	filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		header, err := zip.FileInfoHeader(info)
-		if err != nil {
-			return err
-		}
-
-		if baseDir != "" {
-			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
-		}
-
-		if info.IsDir() {
-			header.Name += "/"
-		} else {
-			header.Method = zip.Deflate
-		}
-
-		writer, err := archive.CreateHeader(header)
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		file, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			if err := file.Close(); err != nil {
-				log.Fatal(err)
-			}
-		}()
-
-		_, err = io.Copy(writer, file)
-		return err
-	})
-
-	return err
 }
