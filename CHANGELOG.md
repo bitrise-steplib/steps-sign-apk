@@ -1,6 +1,12 @@
-## Changelog (Current version: 0.9.6)
+## Changelog (Current version: 0.9.7)
 
 -----------------
+
+### 0.9.7 (2016 Jul 01)
+
+* [7f13a1b] prepare for 0.9.7
+* [9377e0a] Merge pull request #13 from bitrise-steplib/review
+* [71c741c] apk sign revision
 
 ### 0.9.6 (2016 Apr 19)
 
@@ -41,4 +47,4 @@
 
 -----------------
 
-Updated: 2016 Apr 19
+Updated: 2016 Jul 01
