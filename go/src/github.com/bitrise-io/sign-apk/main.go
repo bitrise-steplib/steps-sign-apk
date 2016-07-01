@@ -42,48 +42,6 @@ func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
 	return envman.Run()
 }
 
-func osName() (string, error) {
-	return cmdex.RunCommandAndReturnCombinedStdoutAndStderr("uname", "-s")
-}
-
-func aptGetInstall(tool string) error {
-	return cmdex.RunCommand("apt-get", "install", tool)
-}
-
-func isToolInstalled(tool string) bool {
-	toolPath, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr("which", tool)
-	if err != nil {
-		return false
-	}
-	return (toolPath != "")
-}
-
-func ensureZipInstalled() error {
-	osName, err := osName()
-	if err != nil {
-		return err
-	}
-
-	tools := []string{"zip", "unzip"}
-	for _, tool := range tools {
-		if installed := isToolInstalled(tool); err != nil {
-			return err
-		} else if !installed {
-			if osName == "Darwin" {
-				return fmt.Errorf("tool (%s) should be installed on %s", tool, osName)
-			} else if osName == "Linux" {
-				if err := aptGetInstall(tool); err != nil {
-					return err
-				}
-			} else {
-				return fmt.Errorf("unkown os name: %s", osName)
-			}
-		}
-	}
-
-	return nil
-}
-
 func download(url, pth string) error {
 	out, err := os.Create(pth)
 	defer func() {
@@ -338,7 +296,7 @@ func main() {
 	log.Done("verified")
 
 	log.Info("Zipalign APK")
-	signedAPKPth := filepath.Join(apkDir, apkBasename+"bitrise-signed"+apkExt)
+	signedAPKPth := filepath.Join(apkDir, apkBasename+"-bitrise-signed"+apkExt)
 	if err := zipalignAPK(zipalign, unalignedAPKPth, signedAPKPth); err != nil {
 		log.Fail("Failed to zipalign APK, error: %s", err)
 	}
