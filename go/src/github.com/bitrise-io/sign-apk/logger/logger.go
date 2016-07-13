@@ -39,11 +39,21 @@ func Done(format string, v ...interface{}) {
 
 // Configs ...
 func Configs(apkPth, keystoreURL, keystorePassword, keystoreAlias, privateKeyPassword, jarsignerOptions string) {
+	secureKeystorePassword := "EMPTY"
+	if keystorePassword != "" {
+		secureKeystorePassword = "***"
+	}
+
+	securePrivateKeyPassword := "EMPTY"
+	if securePrivateKeyPassword != "" {
+		securePrivateKeyPassword = "***"
+	}
+
 	Info("Configs:")
 	Details("apk_path: %s", apkPth)
 	Details("keystore_url: %s", keystoreURL)
-	Details("keystore_password: %s", keystorePassword)
+	Details("keystore_password: %s", secureKeystorePassword)
 	Details("keystore_alias: %s", keystoreAlias)
-	Details("private_key_password: %s", privateKeyPassword)
+	Details("private_key_password: %s", securePrivateKeyPassword)
 	Details("jarsigner_options: %s", jarsignerOptions)
 }
