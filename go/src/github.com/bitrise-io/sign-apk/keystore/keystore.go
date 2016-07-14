@@ -18,93 +18,117 @@ import (
 
 const jarsigner = "/usr/bin/jarsigner"
 
-// KeystoreModel ...
-type KeystoreModel struct {
-	Path               string
-	Alias              string
-	Password           string
-	SignatureAlgorithm string
+// Helper ...
+type Helper struct {
+	keystorePth        string
+	keystorePassword   string
+	alias              string
+	signatureAlgorithm string
 }
 
-// NewKeystoreModel ...
-func NewKeystoreModel(pth, password, alias string) (KeystoreModel, error) {
-	if exist, err := pathutil.IsPathExists(pth); err != nil {
-		return KeystoreModel{}, err
+// NewHelper ...
+func NewHelper(keystorePth, keystorePassword, alias string) (Helper, error) {
+	if exist, err := pathutil.IsPathExists(keystorePth); err != nil {
+		return Helper{}, err
 	} else if !exist {
-		return KeystoreModel{}, fmt.Errorf("keystore not exist at: %s", pth)
+		return Helper{}, fmt.Errorf("keystore not exist at: %s", keystorePth)
 	}
 
 	cmdSlice := []string{
 		"keytool",
 		"-list",
 		"-v",
+
+		"-keystore",
+		keystorePth,
+		"-storepass",
+		keystorePassword,
+
 		"-alias",
 		alias,
-		"-keystore",
-		pth,
-		"-storepass",
-		password,
+
 		"-J-Dfile.encoding=utf-8",
 		"-J-Duser.language=en-US",
 	}
 
-	keystoreData, err := run.ExecuteForOutput(cmdSlice)
+	out, err := run.ExecuteForOutput(cmdSlice)
 	if err != nil {
-		if errorutil.IsExitStatusError(err) {
-			return KeystoreModel{}, errors.New(keystoreData)
-		}
-		return KeystoreModel{}, err
+		return Helper{}, properError(err, out)
+	}
+	if out == "" {
+		return Helper{}, fmt.Errorf("failed to read keystore, maybe alias (%s) or password (%s) is not correct", alias, "****")
 	}
 
-	if keystoreData == "" {
-		return KeystoreModel{}, fmt.Errorf("failed to read keystore, maybe alias (%s) or password (%s) is not correct", alias, "****")
-	}
-
-	signatureAlgorithm, err := findSignatureAlgorithm(keystoreData)
+	signatureAlgorithm, err := findSignatureAlgorithm(out)
 	if err != nil {
-		return KeystoreModel{}, err
+		return Helper{}, err
 	}
 	if signatureAlgorithm == "" {
-		return KeystoreModel{}, errors.New("failed to find signature algorithm")
+		return Helper{}, errors.New("failed to find signature algorithm")
 	}
 
-	return KeystoreModel{
-		Path:               pth,
-		Alias:              alias,
-		Password:           password,
-		SignatureAlgorithm: signatureAlgorithm,
+	return Helper{
+		keystorePth:        keystorePth,
+		keystorePassword:   keystorePassword,
+		alias:              alias,
+		signatureAlgorithm: signatureAlgorithm,
 	}, nil
 }
 
+func (helper Helper) createSignCmd(apkPth, destApkPth, privateKeyPassword string) ([]string, error) {
+	split := strings.Split(helper.signatureAlgorithm, "with")
+	if len(split) != 2 {
+		return []string{}, fmt.Errorf("failed to parse signature algorithm: %s", helper.signatureAlgorithm)
+	}
+	split = strings.Split(split[1], "and")
+
+	signingAlgorithm := "SHA1with" + split[0]
+	digestAlgorithm := "SHA1"
+
+	cmdSlice := []string{
+		jarsigner,
+		"-sigfile",
+		"CERT",
+
+		"-sigalg",
+		signingAlgorithm,
+		"-digestalg",
+		digestAlgorithm,
+
+		"-keystore",
+		helper.keystorePth,
+		"-storepass",
+		helper.keystorePassword,
+	}
+
+	if privateKeyPassword != "" {
+		cmdSlice = append(cmdSlice, "-keypass", privateKeyPassword)
+	}
+
+	cmdSlice = append(cmdSlice, "-signedjar", destApkPth, apkPth, helper.alias)
+
+	return cmdSlice, nil
+}
+
 // SignAPK ...
-func (keystore KeystoreModel) SignAPK(apkPth, destApkPth, password string) error {
+func (helper Helper) SignAPK(apkPth, destApkPth, privateKeyPassword string) error {
 	if exist, err := pathutil.IsPathExists(apkPth); err != nil {
 		return err
 	} else if !exist {
 		return fmt.Errorf("APK not exist at: %s", apkPth)
 	}
 
-	cmdSlice, err := createSignCmd(
-		apkPth,
-		destApkPth,
-		keystore.Path,
-		keystore.Alias,
-		keystore.Password,
-		keystore.SignatureAlgorithm,
-	)
+	cmdSlice, err := helper.createSignCmd(apkPth, destApkPth, privateKeyPassword)
 	if err != nil {
 		return err
 	}
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
+	prinatableCmd := cmdex.PrintableCommandArgs(false, secureSignCmd(cmdSlice))
 	log.Details("=> %s", prinatableCmd)
 
 	out, err := run.ExecuteForOutput(cmdSlice)
 	if err != nil {
-		if errorutil.IsExitStatusError(err) {
-			return errors.New(out)
-		}
-		return err
+		return properError(err, out)
 	}
 	if !strings.Contains(out, "jar signed.") {
 		return errors.New(out)
@@ -113,7 +137,7 @@ func (keystore KeystoreModel) SignAPK(apkPth, destApkPth, password string) error
 }
 
 // VerifyAPK ...
-func (keystore KeystoreModel) VerifyAPK(apkPth string) error {
+func (helper Helper) VerifyAPK(apkPth string) error {
 	cmdSlice := []string{
 		jarsigner,
 		"-verify",
@@ -127,10 +151,7 @@ func (keystore KeystoreModel) VerifyAPK(apkPth string) error {
 
 	out, err := run.ExecuteForOutput(cmdSlice)
 	if err != nil {
-		if errorutil.IsExitStatusError(err) {
-			return errors.New(out)
-		}
-		return err
+		return properError(err, out)
 	}
 	if !strings.Contains(out, "jar verified.") {
 		return errors.New(out)
@@ -138,36 +159,11 @@ func (keystore KeystoreModel) VerifyAPK(apkPth string) error {
 	return nil
 }
 
-func createSignCmd(apkPth, destApkPth, keystorePath, keystoreAlias, keystorePassword, signatureAlgorithm string) ([]string, error) {
-	split := strings.Split(signatureAlgorithm, "with")
-	if len(split) != 2 {
-		return []string{}, fmt.Errorf("failed to parse signature algorithm: %s", signatureAlgorithm)
+func properError(err error, out string) error {
+	if errorutil.IsExitStatusError(err) {
+		return errors.New(out)
 	}
-	split = strings.Split(split[1], "and")
-
-	signingAlgorithm := "SHA1with" + split[0]
-	digestAlgorithm := "SHA1"
-
-	return []string{
-		jarsigner,
-		"-sigfile",
-		"CERT",
-
-		"-sigalg",
-		signingAlgorithm,
-		"-digestalg",
-		digestAlgorithm,
-
-		"-keystore",
-		keystorePath,
-		"-storepass",
-		keystorePassword,
-
-		"-signedjar",
-		destApkPth,
-		apkPth,
-		keystoreAlias,
-	}, nil
+	return err
 }
 
 func findSignatureAlgorithm(keystoreData string) (string, error) {
@@ -186,4 +182,18 @@ func findSignatureAlgorithm(keystoreData string) (string, error) {
 	}
 
 	return "", nil
+}
+
+func secureSignCmd(cmdSlice []string) []string {
+	securedCmdSlice := []string{}
+	secureNextParam := false
+	for _, param := range cmdSlice {
+		if secureNextParam {
+			param = "***"
+		}
+
+		secureNextParam = (param == "-storepass" || param == "-keypass")
+		securedCmdSlice = append(securedCmdSlice, param)
+	}
+	return securedCmdSlice
 }

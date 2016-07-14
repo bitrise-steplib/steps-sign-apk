@@ -45,7 +45,7 @@ func Configs(apkPth, keystoreURL, keystorePassword, keystoreAlias, privateKeyPas
 	}
 
 	securePrivateKeyPassword := "EMPTY"
-	if securePrivateKeyPassword != "" {
+	if privateKeyPassword != "" {
 		securePrivateKeyPassword = "***"
 	}
 

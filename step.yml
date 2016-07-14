@@ -45,8 +45,9 @@ inputs:
     opts:
       title: "Private key password"
       summary: ""
-      description: ""
-      is_required: true
+      description: |
+        If key password equals to keystore password, you can leave it empty.
+        Otherwise specify the private key password.
   - jarsigner_options: ""
     opts:
       title: "Additional options for jarsigner"

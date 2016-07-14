@@ -205,7 +205,7 @@ func main() {
 	validateRequiredInput("keystore_url", keystoreURL)
 	validateRequiredInput("keystore_password", keystorePassword)
 	validateRequiredInput("keystore_alias", keystoreAlias)
-	validateRequiredInput("private_key_password", privateKeyPassword)
+
 	fmt.Println("")
 
 	//
@@ -239,9 +239,9 @@ func main() {
 	log.Details("using keystore at: %s", keystorePath)
 	fmt.Println("")
 
-	keystore, err := keystore.NewKeystoreModel(keystorePath, keystorePassword, keystoreAlias)
+	keystore, err := keystore.NewHelper(keystorePath, keystorePassword, keystoreAlias)
 	if err != nil {
-		log.Fail("Failed to create keystore, error: %s", err)
+		log.Fail("Failed to create keystore helper, error: %s", err)
 	}
 
 	//
