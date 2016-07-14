@@ -1,6 +1,12 @@
-## Changelog (Current version: 0.9.8)
+## Changelog (Current version: 1.0.0)
 
 -----------------
+
+### 1.0.0 (2016 Jul 14)
+
+* [8ae9882] prepare for 1.0.0
+* [90c7f06] Merge pull request #15 from bitrise-steplib/secure_inputs
+* [e114087] secure passwords
 
 ### 0.9.8 (2016 Jul 01)
 
@@ -53,4 +59,4 @@
 
 -----------------
 
-Updated: 2016 Jul 01
+Updated: 2016 Jul 14
