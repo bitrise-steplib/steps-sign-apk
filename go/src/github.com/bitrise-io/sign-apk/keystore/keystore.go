@@ -85,7 +85,7 @@ func (helper Helper) createSignCmd(apkPth, destApkPth, privateKeyPassword string
 	signingAlgorithm := "SHA1with" + split[0]
 	digestAlgorithm := "SHA1"
 
-	return []string{
+	cmdSlice := []string{
 		jarsigner,
 		"-sigfile",
 		"CERT",
@@ -99,16 +99,15 @@ func (helper Helper) createSignCmd(apkPth, destApkPth, privateKeyPassword string
 		helper.keystorePth,
 		"-storepass",
 		helper.keystorePassword,
+	}
 
-		"-keypass",
-		privateKeyPassword,
+	if privateKeyPassword != "" {
+		cmdSlice = append(cmdSlice, "-keypass", privateKeyPassword)
+	}
 
-		"-signedjar",
-		destApkPth,
+	cmdSlice = append(cmdSlice, "-signedjar", destApkPth, apkPth, helper.alias)
 
-		apkPth,
-		helper.alias,
-	}, nil
+	return cmdSlice, nil
 }
 
 // SignAPK ...

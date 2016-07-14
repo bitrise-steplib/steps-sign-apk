@@ -205,7 +205,7 @@ func main() {
 	validateRequiredInput("keystore_url", keystoreURL)
 	validateRequiredInput("keystore_password", keystorePassword)
 	validateRequiredInput("keystore_alias", keystoreAlias)
-	validateRequiredInput("private_key_password", privateKeyPassword)
+
 	fmt.Println("")
 
 	//
