@@ -1,4 +1,5 @@
 .bitrise.secrets.yml
 _tmp
+_keystores
 go/bin/
 go/pkg/

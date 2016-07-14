@@ -18,7 +18,7 @@ app:
 workflows:
   # ----------------------------------------------------------------
   # --- workflow to Test this Step
-  test:
+  create_test_apk:
     steps:
     - script:
         title: Print go environment
@@ -54,7 +54,6 @@ workflows:
             #!/bin/bash
             set -e
             set -x
-
             git clone $SAMPLE_APP_REPOSITORY_URL $SAMPLE_APP_CLONE_INTO_DIR
     - change-workdir:
         title: Switch working dir
@@ -67,8 +66,52 @@ workflows:
         - gradle_file: "$BITRISE_PROJECT_PATH"
         - gradle_task: "$GRADLE_TASK"
         - gradlew_path: "$GRADLEW_PATH"
+
+  test:
+    before_run:
+    - create_test_apk
+    steps:
     - path::./:
         title: Step Test
+
+  # ----------------------------------------------------------------
+  # --- workflow for CI testing
+  ci:
+    before_run:
+    - create_test_apk
+    steps:
+    - path::./:
+        is_skippable: true
+        title: Step Test - keystore pass == key pass
+        inputs:
+        - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_1_URL
+        - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_1
+        - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_1
+        - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_1
+    - path::./:
+        is_skippable: true
+        title: Step Test - keystore pass != key pass
+        inputs:
+        - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_2_URL
+        - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_2
+        - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_2
+        - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_2
+    - path::./:
+        is_skippable: true
+        title: Step Test - default alias
+        inputs:
+        - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_3_URL
+        - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_3
+        - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_3
+        - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_3
+    - path::./:
+        is_skippable: true
+        title: Step Test - android studio generated keystore (jks)
+        inputs:
+        - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_4_URL
+        - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_4
+        - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_4
+        - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4
 
   # ----------------------------------------------------------------
   # --- workflow to Create Release with auto version bump

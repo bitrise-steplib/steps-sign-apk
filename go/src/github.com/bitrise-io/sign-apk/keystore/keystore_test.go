@@ -13,16 +13,24 @@ func TestCreateSignCmd(t *testing.T) {
 		apkPth := "android.apk"
 		destApkPth := "android-signed.apk"
 		keystorePath := "keystore.jks"
-		keystoreAlias := "alias"
 		keystorePassword := "pass"
+		alias := "alias"
+		keypassword := "keypass"
 		signatureAlgorithm := "SHA1withRSA"
 
-		cmdSlice, err := createSignCmd(apkPth, destApkPth, keystorePath, keystoreAlias, keystorePassword, signatureAlgorithm)
+		keystore := Helper{
+			keystorePth:        keystorePath,
+			keystorePassword:   keystorePassword,
+			alias:              alias,
+			signatureAlgorithm: signatureAlgorithm,
+		}
+
+		cmdSlice, err := keystore.createSignCmd(apkPth, destApkPth, keypassword)
 		require.NoError(t, err)
-		require.Equal(t, 15, len(cmdSlice))
+		require.Equal(t, 17, len(cmdSlice))
 
 		actual := strings.Join(cmdSlice, " ")
-		expected := jarsigner + " -sigfile CERT -sigalg SHA1withRSA -digestalg SHA1 -keystore keystore.jks -storepass pass -signedjar android-signed.apk android.apk alias"
+		expected := jarsigner + " -sigfile CERT -sigalg SHA1withRSA -digestalg SHA1 -keystore keystore.jks -storepass pass -keypass keypass -signedjar android-signed.apk android.apk alias"
 		require.Equal(t, expected, actual)
 	}
 
@@ -31,16 +39,24 @@ func TestCreateSignCmd(t *testing.T) {
 		apkPth := "android.apk"
 		destApkPth := "android-signed.apk"
 		keystorePath := "keystore.jks"
-		keystoreAlias := "alias"
 		keystorePassword := "pass"
+		alias := "alias"
+		keypassword := "keypass"
 		signatureAlgorithm := "MD5withRSA"
 
-		cmdSlice, err := createSignCmd(apkPth, destApkPth, keystorePath, keystoreAlias, keystorePassword, signatureAlgorithm)
+		keystore := Helper{
+			keystorePth:        keystorePath,
+			keystorePassword:   keystorePassword,
+			alias:              alias,
+			signatureAlgorithm: signatureAlgorithm,
+		}
+
+		cmdSlice, err := keystore.createSignCmd(apkPth, destApkPth, keypassword)
 		require.NoError(t, err)
-		require.Equal(t, 15, len(cmdSlice))
+		require.Equal(t, 17, len(cmdSlice))
 
 		actual := strings.Join(cmdSlice, " ")
-		expected := jarsigner + " -sigfile CERT -sigalg SHA1withRSA -digestalg SHA1 -keystore keystore.jks -storepass pass -signedjar android-signed.apk android.apk alias"
+		expected := jarsigner + " -sigfile CERT -sigalg SHA1withRSA -digestalg SHA1 -keystore keystore.jks -storepass pass -keypass keypass -signedjar android-signed.apk android.apk alias"
 		require.Equal(t, expected, actual)
 	}
 
@@ -49,16 +65,24 @@ func TestCreateSignCmd(t *testing.T) {
 		apkPth := "android.apk"
 		destApkPth := "android-signed.apk"
 		keystorePath := "keystore.jks"
-		keystoreAlias := "alias"
 		keystorePassword := "pass"
+		alias := "alias"
+		keypassword := "keypass"
 		signatureAlgorithm := "MD5withRSAandMGF1"
 
-		cmdSlice, err := createSignCmd(apkPth, destApkPth, keystorePath, keystoreAlias, keystorePassword, signatureAlgorithm)
+		keystore := Helper{
+			keystorePth:        keystorePath,
+			keystorePassword:   keystorePassword,
+			alias:              alias,
+			signatureAlgorithm: signatureAlgorithm,
+		}
+
+		cmdSlice, err := keystore.createSignCmd(apkPth, destApkPth, keypassword)
 		require.NoError(t, err)
-		require.Equal(t, 15, len(cmdSlice))
+		require.Equal(t, 17, len(cmdSlice))
 
 		actual := strings.Join(cmdSlice, " ")
-		expected := jarsigner + " -sigfile CERT -sigalg SHA1withRSA -digestalg SHA1 -keystore keystore.jks -storepass pass -signedjar android-signed.apk android.apk alias"
+		expected := jarsigner + " -sigfile CERT -sigalg SHA1withRSA -digestalg SHA1 -keystore keystore.jks -storepass pass -keypass keypass -signedjar android-signed.apk android.apk alias"
 		require.Equal(t, expected, actual)
 	}
 }
