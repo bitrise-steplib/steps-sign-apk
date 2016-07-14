@@ -1,6 +1,13 @@
-## Changelog (Current version: 1.0.0)
+## Changelog (Current version: 1.0.1)
 
 -----------------
+
+### 1.0.1 (2016 Jul 14)
+
+* [9417135] prepare for 1.0.1
+* [1c6429d] Merge pull request #16 from bitrise-steplib/review
+* [d27dc1b] private key password requirement fix
+* [11b9ab7] keystore password  and key password review
 
 ### 1.0.0 (2016 Jul 14)
 
