@@ -11,9 +11,8 @@ import (
 
 	"github.com/bitrise-io/go-utils/cmdex"
 	"github.com/bitrise-io/go-utils/errorutil"
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	log "github.com/bitrise-io/sign-apk/logger"
-	"github.com/bitrise-io/sign-apk/run"
 )
 
 const jarsigner = "/usr/bin/jarsigner"
@@ -24,6 +23,32 @@ type Helper struct {
 	keystorePassword   string
 	alias              string
 	signatureAlgorithm string
+}
+
+// Execute ...
+func Execute(cmdSlice []string) error {
+	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
+	log.Detail("=> %s", prinatableCmd)
+	fmt.Println("")
+
+	cmd, err := cmdex.NewCommandFromSlice(cmdSlice)
+	if err != nil {
+		return fmt.Errorf("Failed to create command, error: %s", err)
+	}
+
+	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
+	log.Detail(out)
+	return err
+}
+
+// ExecuteForOutput ...
+func ExecuteForOutput(cmdSlice []string) (string, error) {
+	cmd, err := cmdex.NewCommandFromSlice(cmdSlice)
+	if err != nil {
+		return "", fmt.Errorf("Failed to create command, error: %s", err)
+	}
+
+	return cmd.RunAndReturnTrimmedCombinedOutput()
 }
 
 // NewHelper ...
@@ -51,7 +76,7 @@ func NewHelper(keystorePth, keystorePassword, alias string) (Helper, error) {
 		"-J-Duser.language=en-US",
 	}
 
-	out, err := run.ExecuteForOutput(cmdSlice)
+	out, err := ExecuteForOutput(cmdSlice)
 	if err != nil {
 		return Helper{}, properError(err, out)
 	}
@@ -124,9 +149,9 @@ func (helper Helper) SignAPK(apkPth, destApkPth, privateKeyPassword string) erro
 	}
 
 	prinatableCmd := cmdex.PrintableCommandArgs(false, secureSignCmd(cmdSlice))
-	log.Details("=> %s", prinatableCmd)
+	log.Detail("=> %s", prinatableCmd)
 
-	out, err := run.ExecuteForOutput(cmdSlice)
+	out, err := ExecuteForOutput(cmdSlice)
 	if err != nil {
 		return properError(err, out)
 	}
@@ -147,9 +172,9 @@ func (helper Helper) VerifyAPK(apkPth string) error {
 	}
 
 	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
+	log.Detail("=> %s", prinatableCmd)
 
-	out, err := run.ExecuteForOutput(cmdSlice)
+	out, err := ExecuteForOutput(cmdSlice)
 	if err != nil {
 		return properError(err, out)
 	}

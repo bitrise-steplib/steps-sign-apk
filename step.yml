@@ -14,6 +14,15 @@ type_tags:
 is_requires_admin_user: false
 is_always_run: false
 is_skippable: false
+deps:
+  brew:
+  - name: go
+  apt_get:
+  - name: golang
+    bin_name: go
+toolkit:
+  go:
+    package_name: github.com/bitrise-steplib/steps-sign-apk
 inputs:
   - apk_path: "$BITRISE_APK_PATH"
     opts:
@@ -56,5 +65,8 @@ inputs:
         __deprecated!__ jarsigner options are detected from the keystore
 outputs:
 - BITRISE_SIGNED_APK_PATH:
+  opts:
+    title: "Bitrise signed apk path"
+- BITRISE_APK_PATH:
   opts:
     title: "Bitrise signed apk path"
