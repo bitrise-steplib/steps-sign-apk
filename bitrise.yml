@@ -21,29 +21,15 @@ workflows:
   create_test_apk:
     steps:
     - script:
-        title: Print go environment
-        inputs:
-        - content: |-
-            set -x
-            go version
-            echo $GO15VENDOREXPERIMENT
-    - script:
-        title: Export GOPATH
-        inputs:
-        - content: |-
-            set -x
-            envman add --key GOPATH --value "$BITRISE_SOURCE_DIR/go"
-    - script:
-        title: "Go Test"
-        inputs:
-        - working_dir: $BITRISE_SOURCE_DIR/go/src/github.com/bitrise-io/sign-apk
-        - content: |
-            set -ex
-            go test ./...
-    - script:
         title: Step audit
         inputs:
         - content: stepman audit --step-yml=./step.yml
+    - script:
+        title: "Go Test"
+        inputs:
+        - content: |
+            set -ex
+            go test ./...
     - script:
         inputs:
         - content: rm -rf $SAMPLE_APP_CLONE_INTO_DIR
@@ -71,8 +57,17 @@ workflows:
     before_run:
     - create_test_apk
     steps:
+    - script:
+        inputs:
+        - content: |-
+            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH" 
     - path::./:
         title: Step Test
+    - script:
+        inputs:
+        - content: |-
+            echo "BITRISE_SIGNED_APK_PATH: $BITRISE_SIGNED_APK_PATH"
+            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH" 
 
   # ----------------------------------------------------------------
   # --- workflow for CI testing
