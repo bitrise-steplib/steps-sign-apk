@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.0.1)
+## Changelog (Current version: 1.1.0)
 
 -----------------
+
+### 1.1.0 (2016 Sep 28)
+
+* [bba1a23] prepare for 1.1.0
+* [3334d88] Apk path fix (#19)
 
 ### 1.0.1 (2016 Jul 14)
 
@@ -66,4 +71,4 @@
 
 -----------------
 
-Updated: 2016 Jul 14
+Updated: 2016 Sep 28
