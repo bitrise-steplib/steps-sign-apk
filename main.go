@@ -187,17 +187,18 @@ func latestBuildToolsDir(androidHome string) (string, error) {
 		return "", err
 	}
 
-	var latestVersion version.Version
+	var latestVersion *version.Version
+
 	for _, buildToolsDir := range buildToolsDirs {
 		versionStr := strings.TrimPrefix(buildToolsDir, buildTools+"/")
 
 		version, err := version.NewVersion(versionStr)
 		if err != nil {
-			return "", err
+			continue
 		}
 
-		if latestVersion.String() == "" || version.GreaterThan(&latestVersion) {
-			latestVersion = *version
+		if latestVersion == nil || version.GreaterThan(latestVersion) {
+			latestVersion = version
 		}
 	}
 
@@ -252,6 +253,23 @@ func removeFilesFromAPK(aapt, pth string, files []string) error {
 		return errors.New(out)
 	}
 	return err
+}
+
+func isAPKSigned(aapt, pth string) (bool, error) {
+	filesInAPK, err := listFilesInAPK(aapt, pth)
+	if err != nil {
+		return false, err
+	}
+
+	metaFiles := filterMETAFiles(filesInAPK)
+
+	for _, metaFile := range metaFiles {
+		ext := filepath.Ext(metaFile)
+		if strings.EqualFold(ext, ".dsa") || strings.EqualFold(ext, ".rsa") {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func unsignAPK(aapt, pth string) error {
@@ -370,13 +388,24 @@ func main() {
 	unsignedAPKPth := filepath.Join(tmpDir, "unsigned.apk")
 	cmdex.CopyFile(configs.ApkPath, unsignedAPKPth)
 
-	log.Info("Unsign APK if signed")
-	if err := unsignAPK(aapt, unsignedAPKPth); err != nil {
-		log.Error("Failed to unsign APK, error: %s", err)
+	isSigned, err := isAPKSigned(aapt, unsignedAPKPth)
+	if err != nil {
+		log.Error("Failed to check if apk is signed, error: %s", err)
 		os.Exit(1)
 	}
-	log.Done("unsiged")
-	fmt.Println()
+
+	if isSigned {
+		log.Info("Signature file (DSA or RSA) found in META-INF, unsigning the apk...")
+		if err := unsignAPK(aapt, unsignedAPKPth); err != nil {
+			log.Error("Failed to unsign APK, error: %s", err)
+			os.Exit(1)
+		}
+		log.Done("unsiged")
+		fmt.Println()
+	} else {
+		log.Info("No signature file (DSA or RSA) found in META-INF, skipping apk unsign...")
+		fmt.Println()
+	}
 
 	unalignedAPKPth := filepath.Join(tmpDir, "unaligned.apk")
 	log.Info("Sign APK")
