@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.1.0)
+## Changelog (Current version: 1.1.1)
 
 -----------------
+
+### 1.1.1 (2016 Oct 14)
+
+* [aad1ecf] prepare for 1.1.1
+* [7e366b3] unsign apk only if signing files found (#20)
 
 ### 1.1.0 (2016 Sep 28)
 
@@ -71,4 +76,4 @@
 
 -----------------
 
-Updated: 2016 Sep 28
+Updated: 2016 Oct 14
