@@ -54,6 +54,7 @@ func ExecuteForOutput(cmdSlice []string) (string, error) {
 	var errBuf, outputBuf bytes.Buffer
 	writer := io.MultiWriter(&outputBuf, &errBuf)
 	cmd.SetStderr(writer)
+	cmd.SetStdout(writer)
 
 	err = cmd.Run()
 	if err != nil {
