@@ -51,14 +51,14 @@ func ExecuteForOutput(cmdSlice []string) (string, error) {
 		return "", fmt.Errorf("Failed to create command, error: %s", err)
 	}
 
-	var errBuf, outputBuf bytes.Buffer
-	writer := io.MultiWriter(&outputBuf, &errBuf)
+	var outputBuf bytes.Buffer
+	writer := io.MultiWriter(&outputBuf)
 	cmd.SetStderr(writer)
 	cmd.SetStdout(writer)
 
 	err = cmd.Run()
 	if err != nil {
-		err = fmt.Errorf("%s\n%s\n%s", outputBuf.String(), errBuf.String(), err)
+		err = fmt.Errorf("%s\n%s", outputBuf.String(), err)
 	}
 
 	return outputBuf.String(), err
