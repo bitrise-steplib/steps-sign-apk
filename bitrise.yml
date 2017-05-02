@@ -111,6 +111,27 @@ workflows:
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4
 
   # ----------------------------------------------------------------
+  # --- Utility workflows
+  godeps-update:
+    title: Godeps update
+    description: |
+      Used for updating bitrise dependencies with godep
+    steps:
+    - script:
+        title: Dependency update
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            go get -u -v github.com/tools/godep
+            go get github.com/davecgh/go-spew/spew
+            go get github.com/pmezard/go-difflib/difflib
+            rm -rf ./Godeps
+            rm -rf ./vendor
+            go get -t -d ./...
+            godep save ./...
+
+  # ----------------------------------------------------------------
   # --- workflow to Create Release
   create-release:
     steps:
