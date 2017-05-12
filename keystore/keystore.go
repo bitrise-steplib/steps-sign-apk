@@ -4,12 +4,14 @@ package keystore
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
@@ -27,28 +29,36 @@ type Helper struct {
 
 // Execute ...
 func Execute(cmdSlice []string) error {
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Detail("=> %s", prinatableCmd)
-	fmt.Println("")
-
-	cmd, err := cmdex.NewCommandFromSlice(cmdSlice)
+	cmd, err := command.NewFromSlice(cmdSlice)
 	if err != nil {
 		return fmt.Errorf("Failed to create command, error: %s", err)
 	}
 
+	log.Printf("=> %s\n", cmd.PrintableCommandArgs())
+
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
-	log.Detail(out)
+	log.Printf(out)
 	return err
 }
 
 // ExecuteForOutput ...
 func ExecuteForOutput(cmdSlice []string) (string, error) {
-	cmd, err := cmdex.NewCommandFromSlice(cmdSlice)
+	cmd, err := command.NewFromSlice(cmdSlice)
 	if err != nil {
 		return "", fmt.Errorf("Failed to create command, error: %s", err)
 	}
 
-	return cmd.RunAndReturnTrimmedCombinedOutput()
+	var outputBuf bytes.Buffer
+	writer := io.MultiWriter(&outputBuf)
+	cmd.SetStderr(writer)
+	cmd.SetStdout(writer)
+
+	err = cmd.Run()
+	if err != nil {
+		err = fmt.Errorf("%s\n%s", outputBuf.String(), err)
+	}
+
+	return outputBuf.String(), err
 }
 
 // NewHelper ...
@@ -148,8 +158,8 @@ func (helper Helper) SignAPK(apkPth, destApkPth, privateKeyPassword string) erro
 		return err
 	}
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, secureSignCmd(cmdSlice))
-	log.Detail("=> %s", prinatableCmd)
+	prinatableCmd := command.PrintableCommandArgs(false, secureSignCmd(cmdSlice))
+	log.Printf("=> %s", prinatableCmd)
 
 	out, err := ExecuteForOutput(cmdSlice)
 	if err != nil {
@@ -171,8 +181,8 @@ func (helper Helper) VerifyAPK(apkPth string) error {
 		apkPth,
 	}
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Detail("=> %s", prinatableCmd)
+	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
+	log.Printf("=> %s", prinatableCmd)
 
 	out, err := ExecuteForOutput(cmdSlice)
 	if err != nil {

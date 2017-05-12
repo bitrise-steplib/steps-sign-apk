@@ -11,12 +11,13 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-steplib/steps-sign-apk/keystore"
-	version "github.com/hashicorp/go-version"
+	"github.com/bitrise-tools/go-android/sdk"
+	"github.com/bitrise-tools/go-steputils/tools"
 )
 
 const jarsigner = "/usr/bin/jarsigner"
@@ -50,37 +51,37 @@ func createConfigsModelFromEnvs() ConfigsModel {
 
 func (configs ConfigsModel) print() {
 	fmt.Println()
-	log.Info("Configs:")
-	log.Detail(" - ApkPath: %s", configs.ApkPath)
-	log.Detail(" - KeystoreURL: %s", secureInput(configs.KeystoreURL))
-	log.Detail(" - KeystorePassword: %s", secureInput(configs.KeystorePassword))
-	log.Detail(" - KeystoreAlias: %s", configs.KeystoreAlias)
-	log.Detail(" - PrivateKeyPassword: %s", secureInput(configs.PrivateKeyPassword))
-	log.Detail(" - JarsignerOptions: %s", configs.JarsignerOptions)
+	log.Infof("Configs:")
+	log.Printf(" - ApkPath: %s", configs.ApkPath)
+	log.Printf(" - KeystoreURL: %s", secureInput(configs.KeystoreURL))
+	log.Printf(" - KeystorePassword: %s", secureInput(configs.KeystorePassword))
+	log.Printf(" - KeystoreAlias: %s", configs.KeystoreAlias)
+	log.Printf(" - PrivateKeyPassword: %s", secureInput(configs.PrivateKeyPassword))
+	log.Printf(" - JarsignerOptions: %s", configs.JarsignerOptions)
 	fmt.Println()
 }
 
 func (configs ConfigsModel) validate() error {
 	// required
 	if configs.ApkPath == "" {
-		return errors.New("No ApkPath parameter specified!")
+		return errors.New("no ApkPath parameter specified")
 	}
 	if exist, err := pathutil.IsPathExists(configs.ApkPath); err != nil {
-		return fmt.Errorf("Failed to check if ApkPath exist at: %s, error: %s", configs.ApkPath, err)
+		return fmt.Errorf("failed to check if ApkPath exist at: %s, error: %s", configs.ApkPath, err)
 	} else if !exist {
 		return fmt.Errorf("ApkPath not exist at: %s", configs.ApkPath)
 	}
 
 	if configs.KeystoreURL == "" {
-		return errors.New("No KeystoreURL parameter specified!")
+		return errors.New("no KeystoreURL parameter specified")
 	}
 
 	if configs.KeystorePassword == "" {
-		return errors.New("No KeystorePassword parameter specified!")
+		return errors.New("no KeystorePassword parameter specified")
 	}
 
 	if configs.KeystoreAlias == "" {
-		return errors.New("No KeystoreAlias parameter specified!")
+		return errors.New("no KeystoreAlias parameter specified")
 	}
 
 	return nil
@@ -137,17 +138,11 @@ func secureInput(str string) string {
 	return prefix + sec
 }
 
-func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
-	cmd := cmdex.NewCommand("envman", "add", "--key", keyStr)
-	cmd.SetStdin(strings.NewReader(valueStr))
-	return cmd.Run()
-}
-
 func download(url, pth string) error {
 	out, err := os.Create(pth)
 	defer func() {
 		if err := out.Close(); err != nil {
-			log.Warn("Failed to close file: %s, error: %s", out, err)
+			log.Warnf("Failed to close file: %s, error: %s", out, err)
 		}
 	}()
 
@@ -157,7 +152,7 @@ func download(url, pth string) error {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Warn("Failed to close response body, error: %s", err)
+			log.Warnf("Failed to close response body, error: %s", err)
 		}
 	}()
 
@@ -176,37 +171,6 @@ func fileList(searchDir string) ([]string, error) {
 	}
 
 	return fileList, nil
-}
-
-func latestBuildToolsDir(androidHome string) (string, error) {
-	buildTools := filepath.Join(androidHome, "build-tools")
-	pattern := filepath.Join(buildTools, "*")
-
-	buildToolsDirs, err := filepath.Glob(pattern)
-	if err != nil {
-		return "", err
-	}
-
-	var latestVersion *version.Version
-
-	for _, buildToolsDir := range buildToolsDirs {
-		versionStr := strings.TrimPrefix(buildToolsDir, buildTools+"/")
-
-		version, err := version.NewVersion(versionStr)
-		if err != nil {
-			continue
-		}
-
-		if latestVersion == nil || version.GreaterThan(latestVersion) {
-			latestVersion = version
-		}
-	}
-
-	if latestVersion.String() == "" {
-		return "", errors.New("failed to find latest build-tools dir")
-	}
-
-	return filepath.Join(buildTools, latestVersion.String()), nil
 }
 
 func listFilesInAPK(aapt, pth string) ([]string, error) {
@@ -245,8 +209,8 @@ func filterSigningFiles(fileList []string) []string {
 func removeFilesFromAPK(aapt, pth string, files []string) error {
 	cmdSlice := append([]string{aapt, "remove", pth}, files...)
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Detail("=> %s", prinatableCmd)
+	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
+	log.Printf("=> %s", prinatableCmd)
 
 	out, err := keystore.ExecuteForOutput(cmdSlice)
 	if err != nil && errorutil.IsExitStatusError(err) {
@@ -282,7 +246,7 @@ func unsignAPK(aapt, pth string) error {
 	signingFiles := filterSigningFiles(metaFiles)
 
 	if len(signingFiles) == 0 {
-		log.Detail("APK is not signed")
+		log.Printf("APK is not signed")
 		return nil
 	}
 
@@ -292,11 +256,24 @@ func unsignAPK(aapt, pth string) error {
 func zipalignAPK(zipalign, pth, dstPth string) error {
 	cmdSlice := []string{zipalign, "-f", "4", pth, dstPth}
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Detail("=> %s", prinatableCmd)
+	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
+	log.Printf("=> %s", prinatableCmd)
 
 	_, err := keystore.ExecuteForOutput(cmdSlice)
 	return err
+}
+
+func prettyAPKBasename(apkPth string) string {
+	apkBasenameWithExt := path.Base(apkPth)
+	apkExt := filepath.Ext(apkBasenameWithExt)
+	apkBasename := strings.TrimSuffix(apkBasenameWithExt, apkExt)
+	apkBasename = strings.TrimSuffix(apkBasename, "-unsigned")
+	return apkBasename
+}
+
+func failf(format string, v ...interface{}) {
+	log.Errorf(format, v)
+	os.Exit(1)
 }
 
 // -----------------------
@@ -306,21 +283,17 @@ func main() {
 	configs := createConfigsModelFromEnvs()
 	configs.print()
 	if err := configs.validate(); err != nil {
-		log.Error("Issue with input: %s", err)
-		os.Exit(1)
+		failf("Issue with input: %s", err)
 	}
 
 	//
 	// Prepare paths
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-apk")
 	if err != nil {
-		log.Error("Failed to create tmp dir, error: %s", err)
-		os.Exit(1)
+		failf("Failed to create tmp dir, error: %s", err)
 	}
 	apkDir := path.Dir(configs.ApkPath)
-	apkBasenameWithExt := path.Base(configs.ApkPath)
-	apkExt := filepath.Ext(apkBasenameWithExt)
-	apkBasename := strings.TrimSuffix(apkBasenameWithExt, apkExt)
+	apkBasename := prettyAPKBasename(configs.ApkPath)
 
 	//
 	// Download keystore
@@ -330,116 +303,101 @@ func main() {
 		var err error
 		keystorePath, err = pathutil.AbsPath(pth)
 		if err != nil {
-			log.Error("Failed to expand path (%s), error: %s", pth, err)
-			os.Exit(1)
+			failf("Failed to expand path (%s), error: %s", pth, err)
 		}
 	} else {
-		log.Info("Download keystore")
+		log.Infof("Download keystore")
 		keystorePath = path.Join(tmpDir, "keystore.jks")
 		if err := download(configs.KeystoreURL, keystorePath); err != nil {
-			log.Error("Failed to download keystore, error: %s", err)
-			os.Exit(1)
+			failf("Failed to download keystore, error: %s", err)
 		}
 	}
-	log.Detail("using keystore at: %s", keystorePath)
+	log.Printf("using keystore at: %s", keystorePath)
 	fmt.Println("")
 
 	keystore, err := keystore.NewHelper(keystorePath, configs.KeystorePassword, configs.KeystoreAlias)
 	if err != nil {
-		log.Error("Failed to create keystore helper, error: %s", err)
-		os.Exit(1)
+		failf("Failed to create keystore helper, error: %s", err)
 	}
 
 	//
 	// Find Android tools
 	androidHome := os.Getenv("ANDROID_HOME")
-	log.Detail("android_home: %s", androidHome)
+	log.Printf("android_home: %s", androidHome)
 
-	latestBuildToolsDir, err := latestBuildToolsDir(androidHome)
+	androidSDK, err := sdk.New(androidHome)
 	if err != nil {
-		log.Error("failed to find latest build-tools")
-		os.Exit(1)
+		failf("failed to create sdk model, error: %s", err)
 	}
-	log.Detail("build_tools: %s", latestBuildToolsDir)
 
-	aapt := filepath.Join(latestBuildToolsDir, "aapt")
-	if exist, err := pathutil.IsPathExists(aapt); err != nil {
-		log.Error("Failed to find aapt path, error: %s", err)
-		os.Exit(1)
-	} else if !exist {
-		log.Error("aapt not found at: %s", aapt)
-		os.Exit(1)
+	aapt, err := androidSDK.LatestBuildToolPath("aapt")
+	if err != nil {
+		failf("Failed to find aapt path, error: %s", err)
 	}
-	log.Detail("aapt: %s", aapt)
+	log.Printf("aapt: %s", aapt)
 
-	zipalign := filepath.Join(latestBuildToolsDir, "zipalign")
-	if exist, err := pathutil.IsPathExists(zipalign); err != nil {
-		log.Error("Failed to find zipalign path, error: %s", err)
-		os.Exit(1)
-	} else if !exist {
-		log.Error("zipalign not found at: %s", zipalign)
-		os.Exit(1)
+	zipalign, err := androidSDK.LatestBuildToolPath("zipalign")
+	if err != nil {
+		failf("Failed to find zipalign path, error: %s", err)
 	}
-	log.Detail("zipalign: %s", zipalign)
+	log.Printf("zipalign: %s", zipalign)
 	fmt.Println()
 
 	//
 	// Resign apk
 	unsignedAPKPth := filepath.Join(tmpDir, "unsigned.apk")
-	cmdex.CopyFile(configs.ApkPath, unsignedAPKPth)
+	command.CopyFile(configs.ApkPath, unsignedAPKPth)
 
 	isSigned, err := isAPKSigned(aapt, unsignedAPKPth)
 	if err != nil {
-		log.Error("Failed to check if apk is signed, error: %s", err)
-		os.Exit(1)
+		failf("Failed to check if apk is signed, error: %s", err)
 	}
 
 	if isSigned {
-		log.Info("Signature file (DSA or RSA) found in META-INF, unsigning the apk...")
+		log.Infof("Signature file (DSA or RSA) found in META-INF, unsigning the apk...")
 		if err := unsignAPK(aapt, unsignedAPKPth); err != nil {
-			log.Error("Failed to unsign APK, error: %s", err)
-			os.Exit(1)
+			failf("Failed to unsign APK, error: %s", err)
 		}
-		log.Done("unsiged")
+		log.Donef("unsiged")
 		fmt.Println()
 	} else {
-		log.Info("No signature file (DSA or RSA) found in META-INF, skipping apk unsign...")
+		log.Infof("No signature file (DSA or RSA) found in META-INF, skipping apk unsign...")
 		fmt.Println()
 	}
 
 	unalignedAPKPth := filepath.Join(tmpDir, "unaligned.apk")
-	log.Info("Sign APK")
+	log.Infof("Sign APK")
 	if err := keystore.SignAPK(unsignedAPKPth, unalignedAPKPth, configs.PrivateKeyPassword); err != nil {
-		log.Error("Failed to sign APK, error: %s", err)
-		os.Exit(1)
+		failf("Failed to sign APK, error: %s", err)
 	}
-	log.Done("signed")
+	log.Donef("signed")
 	fmt.Println()
 
-	log.Info("Verify APK")
+	log.Infof("Verify APK")
 	if err := keystore.VerifyAPK(unalignedAPKPth); err != nil {
-		log.Error("Failed to verify APK, error: %s", err)
-		os.Exit(1)
+		failf("Failed to verify APK, error: %s", err)
 	}
-	log.Done("verified")
+	log.Donef("verified")
 	fmt.Println()
 
-	log.Info("Zipalign APK")
-	signedAPKPth := filepath.Join(apkDir, apkBasename+"-bitrise-signed"+apkExt)
+	log.Infof("Zipalign APK")
+	signedAPKPth := filepath.Join(apkDir, apkBasename+"-bitrise-signed.apk")
 	if err := zipalignAPK(zipalign, unalignedAPKPth, signedAPKPth); err != nil {
-		log.Error("Failed to zipalign APK, error: %s", err)
-		os.Exit(1)
+		failf("Failed to zipalign APK, error: %s", err)
 	}
-	log.Done("zipaligned")
+	log.Donef("zipaligned")
 	fmt.Println()
 
 	// Exporting signed ipa
 	fmt.Println("")
-	log.Done("Signed APK created at: %s", signedAPKPth)
-	if err := exportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedAPKPth); err != nil {
-		log.Warn("Failed to export APK, error: %s", err)
+
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedAPKPth); err != nil {
+		log.Warnf("Failed to export APK, error: %s", err)
 	}
-	if err := exportEnvironmentWithEnvman("BITRISE_APK_PATH", signedAPKPth); err != nil {
-		log.Warn("Failed to export APK, error: %s", err)
+	log.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", signedAPKPth)
+
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_APK_PATH", signedAPKPth); err != nil {
+		log.Warnf("Failed to export APK, error: %s", err)
 	}
+	log.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_APK_PATH (value: %s)", signedAPKPth)
 }

@@ -6,6 +6,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestPrettyAPKBasename(t *testing.T) {
+	require.Equal(t, "app", prettyAPKBasename("app-unsigned.apk"))
+	require.Equal(t, "app-signed", prettyAPKBasename("app-signed.apk"))
+	require.Equal(t, "app-debug", prettyAPKBasename("app-debug.apk"))
+	require.Equal(t, "app-release", prettyAPKBasename("app-release.apk"))
+}
+
 func TestFilterMETAFiles(t *testing.T) {
 	t.Log("finds files in META-INF folder")
 	{
