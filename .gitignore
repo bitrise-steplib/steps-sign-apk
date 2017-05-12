@@ -1,4 +1,5 @@
-.bitrise.secrets.yml
+.bitrise*
+.gows*
 _tmp
 _keystores
 go/bin/

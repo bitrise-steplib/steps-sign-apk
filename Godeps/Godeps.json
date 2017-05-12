@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/bitrise-steplib/steps-sign-apk",
-	"GoVersion": "go1.7",
+	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Packages": [
 		"./..."
@@ -25,6 +25,14 @@
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
 			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-android/sdk",
+			"Rev": "3d8467a12437544f1f891d37a2586164f067d865"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-steputils/tools",
+			"Rev": "557edc7229adb6035129176478e96616180df77c"
 		},
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",

@@ -7,10 +7,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
-
-	"io"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
@@ -30,14 +29,12 @@ type Helper struct {
 
 // Execute ...
 func Execute(cmdSlice []string) error {
-	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
-	log.Printf("=> %s", prinatableCmd)
-	fmt.Println("")
-
 	cmd, err := command.NewFromSlice(cmdSlice)
 	if err != nil {
 		return fmt.Errorf("Failed to create command, error: %s", err)
 	}
+
+	log.Printf("=> %s\n", cmd.PrintableCommandArgs())
 
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 	log.Printf(out)
