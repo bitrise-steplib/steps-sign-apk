@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.1.1)
+## Changelog (Current version: 1.1.2)
 
 -----------------
+
+### 1.1.2 (2017 May 12)
+
+* [66601f5] prepare for 1.1.2
+* [d339d07] gitignore fix
+* [d465d16] Print more error on fail (#23)
 
 ### 1.1.1 (2016 Oct 14)
 
@@ -76,4 +82,4 @@
 
 -----------------
 
-Updated: 2016 Oct 14
+Updated: 2017 May 12
