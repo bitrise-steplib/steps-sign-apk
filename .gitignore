@@ -2,5 +2,3 @@
 .gows*
 _tmp
 _keystores
-go/bin/
-go/pkg/
