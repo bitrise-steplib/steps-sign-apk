@@ -28,7 +28,15 @@ inputs:
     opts:
       title: "apk path"
       summary: ""
-      description: ""
+      description: |-
+        Path(s) to the APK to sign.
+
+        You can provide multiple APK paths separated by `|` character.
+
+        Format examples:
+
+        - `/path/to/my/app.apk`
+        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
       is_required: true
   - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_URL
     opts:
