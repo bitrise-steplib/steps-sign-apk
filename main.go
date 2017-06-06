@@ -66,10 +66,14 @@ func (configs ConfigsModel) validate() error {
 	if configs.ApkPath == "" {
 		return errors.New("no ApkPath parameter specified")
 	}
-	if exist, err := pathutil.IsPathExists(configs.ApkPath); err != nil {
-		return fmt.Errorf("failed to check if ApkPath exist at: %s, error: %s", configs.ApkPath, err)
-	} else if !exist {
-		return fmt.Errorf("ApkPath not exist at: %s", configs.ApkPath)
+
+	apkPaths := strings.Split(configs.ApkPath, "|")
+	for _, apkPath := range apkPaths {
+		if exist, err := pathutil.IsPathExists(apkPath); err != nil {
+			return fmt.Errorf("failed to check if ApkPath exist at: %s, error: %s", apkPath, err)
+		} else if !exist {
+			return fmt.Errorf("ApkPath not exist at: %s", apkPath)
+		}
 	}
 
 	if configs.KeystoreURL == "" {
@@ -292,8 +296,6 @@ func main() {
 	if err != nil {
 		failf("Failed to create tmp dir, error: %s", err)
 	}
-	apkDir := path.Dir(configs.ApkPath)
-	apkBasename := prettyAPKBasename(configs.ApkPath)
 
 	//
 	// Download keystore
@@ -343,53 +345,62 @@ func main() {
 	log.Printf("zipalign: %s", zipalign)
 	fmt.Println()
 
-	//
-	// Resign apk
-	unsignedAPKPth := filepath.Join(tmpDir, "unsigned.apk")
-	command.CopyFile(configs.ApkPath, unsignedAPKPth)
+	apkPaths := strings.Split(configs.ApkPath, "|")
+	signedAPKPaths := make([]string, len(apkPaths))
+	for i, apkPath := range apkPaths {
+		apkDir := path.Dir(apkPath)
+		apkBasename := prettyAPKBasename(apkPath)
 
-	isSigned, err := isAPKSigned(aapt, unsignedAPKPth)
-	if err != nil {
-		failf("Failed to check if apk is signed, error: %s", err)
-	}
+		//
+		// Resign apk
+		unsignedAPKPth := filepath.Join(tmpDir, "unsigned.apk")
+		command.CopyFile(apkPath, unsignedAPKPth)
 
-	if isSigned {
-		log.Infof("Signature file (DSA or RSA) found in META-INF, unsigning the apk...")
-		if err := unsignAPK(aapt, unsignedAPKPth); err != nil {
-			failf("Failed to unsign APK, error: %s", err)
+		isSigned, err := isAPKSigned(aapt, unsignedAPKPth)
+		if err != nil {
+			failf("Failed to check if apk is signed, error: %s", err)
 		}
-		log.Donef("unsiged")
+
+		if isSigned {
+			log.Infof("Signature file (DSA or RSA) found in META-INF, unsigning the apk...")
+			if err := unsignAPK(aapt, unsignedAPKPth); err != nil {
+				failf("Failed to unsign APK, error: %s", err)
+			}
+			log.Donef("unsiged")
+			fmt.Println()
+		} else {
+			log.Infof("No signature file (DSA or RSA) found in META-INF, skipping apk unsign...")
+			fmt.Println()
+		}
+
+		unalignedAPKPth := filepath.Join(tmpDir, "unaligned.apk")
+		log.Infof("Sign APK")
+		if err := keystore.SignAPK(unsignedAPKPth, unalignedAPKPth, configs.PrivateKeyPassword); err != nil {
+			failf("Failed to sign APK, error: %s", err)
+		}
+		log.Donef("signed")
 		fmt.Println()
-	} else {
-		log.Infof("No signature file (DSA or RSA) found in META-INF, skipping apk unsign...")
+
+		log.Infof("Verify APK")
+		if err := keystore.VerifyAPK(unalignedAPKPth); err != nil {
+			failf("Failed to verify APK, error: %s", err)
+		}
+		log.Donef("verified")
 		fmt.Println()
+
+		log.Infof("Zipalign APK")
+		signedAPKPaths[i] = filepath.Join(apkDir, apkBasename+"-bitrise-signed.apk")
+		if err := zipalignAPK(zipalign, unalignedAPKPth, signedAPKPaths[i]); err != nil {
+			failf("Failed to zipalign APK, error: %s", err)
+		}
+		log.Donef("zipaligned")
+		fmt.Println()
+
+		// Exporting signed apk
+		fmt.Println("")
 	}
 
-	unalignedAPKPth := filepath.Join(tmpDir, "unaligned.apk")
-	log.Infof("Sign APK")
-	if err := keystore.SignAPK(unsignedAPKPth, unalignedAPKPth, configs.PrivateKeyPassword); err != nil {
-		failf("Failed to sign APK, error: %s", err)
-	}
-	log.Donef("signed")
-	fmt.Println()
-
-	log.Infof("Verify APK")
-	if err := keystore.VerifyAPK(unalignedAPKPth); err != nil {
-		failf("Failed to verify APK, error: %s", err)
-	}
-	log.Donef("verified")
-	fmt.Println()
-
-	log.Infof("Zipalign APK")
-	signedAPKPth := filepath.Join(apkDir, apkBasename+"-bitrise-signed.apk")
-	if err := zipalignAPK(zipalign, unalignedAPKPth, signedAPKPth); err != nil {
-		failf("Failed to zipalign APK, error: %s", err)
-	}
-	log.Donef("zipaligned")
-	fmt.Println()
-
-	// Exporting signed ipa
-	fmt.Println("")
+	signedAPKPth := strings.Join(signedAPKPaths, "|")
 
 	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedAPKPth); err != nil {
 		log.Warnf("Failed to export APK, error: %s", err)
