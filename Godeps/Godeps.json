@@ -8,31 +8,31 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
-			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/command",
-			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/errorutil",
-			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/log",
-			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
-			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-android/sdk",
-			"Rev": "3d8467a12437544f1f891d37a2586164f067d865"
+			"Rev": "00b72392d46cd594ca6a1c240ec9d8936127f4a4"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-steputils/tools",
-			"Rev": "557edc7229adb6035129176478e96616180df77c"
+			"Rev": "a848c9870ff7d745a8fb2a951e1c81fcb147b4ec"
 		},
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
@@ -50,13 +50,13 @@
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
-			"Comment": "v1.1.4-27-g4d4bfba",
-			"Rev": "4d4bfba8f1d1027c4fdbe371823030df51419987"
+			"Comment": "v1.1.4-66-gf6abca5",
+			"Rev": "f6abca593680b2315d2075e0f5e2a9751e3f431a"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/require",
-			"Comment": "v1.1.4-27-g4d4bfba",
-			"Rev": "4d4bfba8f1d1027c4fdbe371823030df51419987"
+			"Comment": "v1.1.4-66-gf6abca5",
+			"Rev": "f6abca593680b2315d2075e0f5e2a9751e3f431a"
 		}
 	]
 }
