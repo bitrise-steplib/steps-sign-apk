@@ -20,6 +20,7 @@ workflows:
   # --- workflow to Test this Step
   ci:
     before_run:
+    - audit-this-step
     - go-tests
     - create_test_apk
     steps:
@@ -58,6 +59,7 @@ workflows:
 
   test:
     before_run:
+    - audit-this-step
     - go-tests
     - create_test_apk
     steps:
@@ -238,6 +240,8 @@ workflows:
 
       Once it finishes the only thing left is to actually create a Pull Request,
       the way described in the guide printed at the end of the process.
+    before_run:
+    - audit-this-step
     steps:
     - script:
         inputs:
