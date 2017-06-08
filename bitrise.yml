@@ -1,9 +1,9 @@
-format_version: 1.0.0
+format_version: "2"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - RELEASE_VERSION: 1.1.2
+  - RELEASE_VERSION: 1.2.0
 
   - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-samples/sample-apps-android-abi-split.git
   - GRADLE_TASK: assembleRelease
