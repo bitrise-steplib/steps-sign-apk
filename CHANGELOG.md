@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.1.2)
+## Changelog (Current version: 1.2.0)
 
 -----------------
+
+### 1.2.0 (2017 Jun 08)
+
+* [8403fcd] prepare for 1.2.0
+* [9dba076] Update (#25)
+* [a07430f] Added possibility to sign multiple APK files (#24)
 
 ### 1.1.2 (2017 May 12)
 
@@ -82,4 +88,4 @@
 
 -----------------
 
-Updated: 2017 May 12
+Updated: 2017 Jun 08
