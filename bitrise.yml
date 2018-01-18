@@ -78,6 +78,8 @@ workflows:
             echo "BITRISE_APK_PATH: $BITRISE_APK_PATH" 
 
   create_test_apk:
+    envs:
+    - BRANCH: master
     steps:
     - script:
         inputs:
