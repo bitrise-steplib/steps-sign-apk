@@ -6,6 +6,7 @@ app:
   - RELEASE_VERSION: 1.2.0
 
   - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-samples/sample-apps-android-abi-split.git
+  - BRANCH: master
   - GRADLE_TASK: assembleRelease
   - GRADLEW_PATH: "./gradlew"
 
@@ -78,8 +79,6 @@ workflows:
             echo "BITRISE_APK_PATH: $BITRISE_APK_PATH" 
 
   create_test_apk:
-    envs:
-    - BRANCH: master
     steps:
     - script:
         inputs:
