@@ -97,6 +97,7 @@ workflows:
         inputs:
         - content: |-
             #!/usr/bin/env bash
+            set -x
 
             if [[ -z "${SAMPLE_APP_REPOSITORY_URL}" ]]; then
               echo "error: there is no SAMPLE_APP_URL env var specified"
