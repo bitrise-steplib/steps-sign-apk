@@ -108,7 +108,7 @@ workflows:
             fi
 
             git init
-            git remote add origin "${SAMPLE_APP_URL}"
+            git remote add origin "${SAMPLE_APP_REPOSITORY_URL}"
             git fetch || exit 1
             [[ -n "${COMMIT}" ]] && git checkout "${COMMIT}" || git checkout "${BRANCH}"
     - gradle-runner:
