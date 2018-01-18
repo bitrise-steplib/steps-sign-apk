@@ -6,6 +6,7 @@ app:
   - RELEASE_VERSION: 1.2.0
 
   - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-samples/sample-apps-android-abi-split.git
+  - BRANCH: master
   - GRADLE_TASK: assembleRelease
   - GRADLEW_PATH: "./gradlew"
 
@@ -91,15 +92,24 @@ workflows:
         inputs:
         - path: ./_tmp
         - is_create_path: true
-    - git-clone:
-        run_if: true
+    - script:
         inputs:
-        - repository_url: $SAMPLE_APP_REPOSITORY_URL
-        - branch: "master"
-        - commit: ""
-        - tag: ""
-        - pull_request_id: ""
-        - clone_into_dir: "./"
+        - content: |-
+            #!/usr/bin/env bash
+            set -x
+
+            if [[ -z "${SAMPLE_APP_REPOSITORY_URL}" ]]; then
+              echo "error: there is no SAMPLE_APP_URL env var specified"
+              exit 1
+            elif [[ -z "${COMMIT}" && -z "${BRANCH}" ]]; then
+              echo "error: can't checkout: there is no BRANCH or COMMIT env var specified"
+              exit 1
+            fi
+
+            git init
+            git remote add origin "${SAMPLE_APP_REPOSITORY_URL}"
+            git fetch || exit 1
+            [[ -n "${COMMIT}" ]] && git checkout "${COMMIT}" || git checkout "${BRANCH}"
     - gradle-runner:
         inputs:
         - gradle_task: "$GRADLE_TASK"
