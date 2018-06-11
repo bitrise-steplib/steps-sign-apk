@@ -3,7 +3,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - BITRISE_STEP_VERSION: 1.2.0
+  - BITRISE_STEP_VERSION: 1.2.1
   - BITRISE_STEP_ID: sign-apk
   - BITRISE_STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-sign-apk.git
 
