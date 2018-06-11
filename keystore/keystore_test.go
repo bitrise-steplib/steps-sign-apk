@@ -100,7 +100,7 @@ Valid from: Thu Jun 02 19:56:20 CEST 2016 until: Mon May 27 19:56:20 CEST 2041
 Certificate fingerprints:
 	 MD5:  CA:30:61:CB:AD:70:03:73:C7:FD:91:A4:9C:FB:92:F9
 	 SHA1: 66:C3:60:5B:B8:0B:B0:2C:AE:C5:54:72:B6:B2:D6:18:99:FB:70:9F
-	 Signature algorithm name: SHA1withRSA
+	 Signature algorithm name: SHA1withRSA (Weak)
 	 Version: 3
 `
 	signatureAlgorithm, err := findSignatureAlgorithm(keystoreData)

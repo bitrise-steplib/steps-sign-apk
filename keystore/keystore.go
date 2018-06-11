@@ -201,28 +201,29 @@ func properError(err error, out string) error {
 }
 
 func findSignatureAlgorithm(keystoreData string) (string, error) {
-	// exp := regexp.MustCompile(`Signature algorithm name: ([^\s].*)`)
-
 	scanner := bufio.NewScanner(strings.NewReader(keystoreData))
+
 	for scanner.Scan() {
 		line := scanner.Text()
+
 		if strings.Contains(line, "Signature algorithm name: ") {
 			split := strings.Split(line, "Signature algorithm name: ")
+
 			if len(split) < 2 {
 				return "", fmt.Errorf("failed to expand signature algorithm from: %s", line)
 			}
 
 			alg := split[1]
 			split = strings.Split(alg, " ")
+
 			if len(split) > 1 {
 				alg = split[0]
+
+				log.Warnf("🚨 Signature algorithm name contains unnecessary postfix: %s", split[1])
+				log.Printf("Trimmed signature algorithm name: %s", alg)
 			}
 			return alg, nil
 		}
-		// matches := exp.FindStringSubmatch(scanner.Text())
-		// if len(matches) > 1 {
-		// 	return matches[1], nil
-		// }
 	}
 
 	if err := scanner.Err(); err != nil {
