@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"regexp"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command"
@@ -202,13 +201,28 @@ func properError(err error, out string) error {
 }
 
 func findSignatureAlgorithm(keystoreData string) (string, error) {
-	exp := regexp.MustCompile(`Signature algorithm name: (.*)`)
-
 	scanner := bufio.NewScanner(strings.NewReader(keystoreData))
+
 	for scanner.Scan() {
-		matches := exp.FindStringSubmatch(scanner.Text())
-		if len(matches) > 1 {
-			return matches[1], nil
+		line := scanner.Text()
+
+		if strings.Contains(line, "Signature algorithm name: ") {
+			split := strings.Split(line, "Signature algorithm name: ")
+
+			if len(split) < 2 {
+				return "", fmt.Errorf("failed to expand signature algorithm from: %s", line)
+			}
+
+			alg := split[1]
+			split = strings.Split(alg, " ")
+
+			if len(split) > 1 {
+				log.Warnf("🚨 Signature algorithm name contains unnecessary postfix: %s", alg)
+				log.Printf("Trimmed signature algorithm name: %s", split[0])
+
+				alg = split[0]
+			}
+			return alg, nil
 		}
 	}
 
