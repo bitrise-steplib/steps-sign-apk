@@ -1,6 +1,14 @@
-## Changelog (Current version: 1.2.0)
+## Changelog (Current version: 1.2.1)
 
 -----------------
+
+### 1.2.1 (2018 Jun 11)
+
+* [ea27902] Prepare for 1.2.1
+* [b0bd6f3]  - (+2 squashed commits) (#30)
+* [bdb1ca7] Signature algorithm name postfix fix. (#29)
+* [000cc91] Update tags (#26)
+* [0a8a20e] bitrise.yml update
 
 ### 1.2.0 (2017 Jun 08)
 
@@ -88,4 +96,4 @@
 
 -----------------
 
-Updated: 2017 Jun 08
+Updated: 2018 Jun 11
