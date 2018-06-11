@@ -217,10 +217,10 @@ func findSignatureAlgorithm(keystoreData string) (string, error) {
 			split = strings.Split(alg, " ")
 
 			if len(split) > 1 {
-				alg = split[0]
+				log.Warnf("🚨 Signature algorithm name contains unnecessary postfix: %s", alg)
+				log.Printf("Trimmed signature algorithm name: %s", split[0])
 
-				log.Warnf("🚨 Signature algorithm name contains unnecessary postfix: %s", split[1])
-				log.Printf("Trimmed signature algorithm name: %s", alg)
+				alg = split[0]
 			}
 			return alg, nil
 		}
