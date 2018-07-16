@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.2.1)
+## Changelog (Current version: 1.2.2)
 
 -----------------
+
+### 1.2.2 (2018 Jul 16)
+
+* [4e17fff] Prepare for 1.2.2
+* [a33f56e] Merge pull request #31 from bitrise-steplib/type_tag
+* [ea39b96] type_tags fix
 
 ### 1.2.1 (2018 Jun 11)
 
@@ -96,4 +102,4 @@
 
 -----------------
 
-Updated: 2018 Jun 11
+Updated: 2018 Jul 16
