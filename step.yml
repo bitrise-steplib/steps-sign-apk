@@ -15,7 +15,7 @@ project_type_tags:
   - cordova
   - ionic
 type_tags:
-  - codesign
+  - code-sign
 is_requires_admin_user: false
 is_always_run: false
 is_skippable: false
