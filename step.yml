@@ -1,7 +1,8 @@
 title: "Sign APK"
 summary: Sign APK
-description: |-
-  Sign APK.
+description: 
+  With this step, you can digitally sign your app's APK file in your workflow. 
+  All you have to do is upload your keystore file in the Code signing tab of the Workflow Editor.
 website: https://github.com/bitrise-steplib/steps-sign-apk
 source_code_url: https://github.com/bitrise-steplib/steps-sign-apk
 support_url: https://github.com/bitrise-steplib/steps-sign-apk/issues
@@ -34,9 +35,9 @@ inputs:
       title: "apk path"
       summary: ""
       description: |-
-        Path(s) to the APK to sign.
+        Path(s) to the APK file to sign.
 
-        You can provide multiple APK paths separated by `|` character.
+        You can provide multiple APK file paths separated by `|` character.
 
         Format examples:
 
