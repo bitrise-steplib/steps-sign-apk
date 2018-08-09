@@ -57,12 +57,14 @@ inputs:
       summary: ""
       description: ""
       is_required: true
+      is_sensitive: true
   - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
     opts:
       title: "Keystore alias"
       summary: ""
       description: ""
       is_required: true
+      is_sensitive: true
   - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
     opts:
       title: "Private key password"
@@ -70,6 +72,7 @@ inputs:
       description: |
         If key password equals to keystore password, you can leave it empty.
         Otherwise specify the private key password.
+      is_sensitive: true
   - jarsigner_options: ""
     opts:
       title: "Additional options for jarsigner"
