@@ -240,13 +240,13 @@ func isAPKSigned(aapt, pth string) (bool, error) {
 	return false, nil
 }
 
-func unsignAPK(aapt, pth string) error {
-	filesInAPK, err := listFilesInAPK(aapt, pth)
+func unsignBuildArtifact(aapt, pth string) error {
+	filesInBuildArtifact, err := listFilesInAPK(aapt, pth)
 	if err != nil {
 		return err
 	}
 
-	metaFiles := filterMETAFiles(filesInAPK)
+	metaFiles := filterMETAFiles(filesInBuildArtifact)
 	signingFiles := filterSigningFiles(metaFiles)
 
 	if len(signingFiles) == 0 {
@@ -267,12 +267,12 @@ func zipalignAPK(zipalign, pth, dstPth string) error {
 	return err
 }
 
-func prettyAPKBasename(apkPth string) string {
-	apkBasenameWithExt := path.Base(apkPth)
-	apkExt := filepath.Ext(apkBasenameWithExt)
-	apkBasename := strings.TrimSuffix(apkBasenameWithExt, apkExt)
-	apkBasename = strings.TrimSuffix(apkBasename, "-unsigned")
-	return apkBasename
+func prettyBuildArtifactBasename(apkPth string) string {
+	buildArtifactBasenameWithExt := path.Base(apkPth)
+	buildArtifactExt := filepath.Ext(buildArtifactBasenameWithExt)
+	buildArtifactBasename := strings.TrimSuffix(buildArtifactBasenameWithExt, buildArtifactExt)
+	buildArtifactBasename = strings.TrimSuffix(buildArtifactBasename, "-unsigned")
+	return buildArtifactBasename
 }
 
 func failf(format string, v ...interface{}) {
@@ -291,7 +291,7 @@ func main() {
 	}
 
 	// Download keystore
-	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-apk")
+	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
 	if err != nil {
 		failf("Failed to create tmp dir, error: %s", err)
 	}
@@ -342,74 +342,76 @@ func main() {
 	// ---
 
 	// Sign apks
-	apkPaths := strings.Split(configs.ApkPath, "|")
-	signedAPKPaths := make([]string, len(apkPaths))
+	buildArtifactPaths := strings.Split(configs.ApkPath, "|")
+	signedBuildArtifactPaths := make([]string, len(buildArtifactPaths))
 
-	log.Infof("signing %d apks", len(apkPaths))
+	log.Infof("signing %d apks", len(buildArtifactPaths))
 	fmt.Println()
 
-	for i, apkPath := range apkPaths {
-		log.Donef("%d/%d signing %s", i+1, len(apkPaths), apkPath)
+	for i, buildArtifactPath := range buildArtifactPaths {
+		artifactExt := path.Ext(buildArtifactPath)
+		log.Donef("%d/%d signing %s", i+1, len(buildArtifactPaths), buildArtifactPath)
 		fmt.Println()
 
-		apkDir := path.Dir(apkPath)
-		apkBasename := prettyAPKBasename(apkPath)
+		buildArtifactDir := path.Dir(buildArtifactPath)
+		buildArtifactBasename := prettyBuildArtifactBasename(buildArtifactPath)
 
 		// unsign apk
-		unsignedAPKPth := filepath.Join(tmpDir, "unsigned.apk")
-		if err := command.CopyFile(apkPath, unsignedAPKPth); err != nil {
+		unsignedBuildArtifactPth := filepath.Join(tmpDir, "unsigned"+artifactExt)
+		if err := command.CopyFile(buildArtifactPath, unsignedBuildArtifactPth); err != nil {
 			failf("Failed to copy apk, error: %s", err)
 		}
 
-		isSigned, err := isAPKSigned(aapt, unsignedAPKPth)
+		isSigned, err := isAPKSigned(aapt, unsignedBuildArtifactPth)
 		if err != nil {
 			failf("Failed to check if apk is signed, error: %s", err)
 		}
 
 		if isSigned {
-			log.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the apk...")
-			if err := unsignAPK(aapt, unsignedAPKPth); err != nil {
+			log.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the build artifact...")
+			if err := unsignBuildArtifact(aapt, unsignedBuildArtifactPth); err != nil {
 				failf("Failed to unsign APK, error: %s", err)
 			}
 			fmt.Println()
 		} else {
-			log.Printf("No signature file (DSA or RSA) found in META-INF, skipping apk unsign...")
+			log.Printf("No signature file (DSA or RSA) found in META-INF, skipping build artifact unsign...")
 			fmt.Println()
 		}
 		// ---
 
 		// sign apk
-		unalignedAPKPth := filepath.Join(tmpDir, "unaligned.apk")
-		log.Infof("Sign APK")
-		if err := keystore.SignAPK(unsignedAPKPth, unalignedAPKPth, configs.PrivateKeyPassword); err != nil {
+		unalignedBuildArtifactPth := filepath.Join(tmpDir, "unaligned"+artifactExt)
+		log.Infof("Sign Build Artifact")
+		if err := keystore.SignAPK(unsignedBuildArtifactPth, unalignedBuildArtifactPth, configs.PrivateKeyPassword); err != nil {
 			failf("Failed to sign APK, error: %s", err)
 		}
 		fmt.Println()
 
-		log.Infof("Verify APK")
-		if err := keystore.VerifyAPK(unalignedAPKPth); err != nil {
+		log.Infof("Verify Build Artifact")
+		if err := keystore.VerifyAPK(unalignedBuildArtifactPth); err != nil {
 			failf("Failed to verify APK, error: %s", err)
 		}
 		fmt.Println()
 
-		log.Infof("Zipalign APK")
-		signedAPKPaths[i] = filepath.Join(apkDir, apkBasename+"-bitrise-signed.apk")
-		if err := zipalignAPK(zipalign, unalignedAPKPth, signedAPKPaths[i]); err != nil {
+		log.Infof("Zipalign Build Artifact")
+		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
+		signedBuildArtifactPaths[i] = filepath.Join(buildArtifactDir, signedArtifactName)
+		if err := zipalignAPK(zipalign, unalignedBuildArtifactPth, signedBuildArtifactPaths[i]); err != nil {
 			failf("Failed to zipalign APK, error: %s", err)
 		}
 		fmt.Println()
 		//
 	}
 
-	signedAPKPth := strings.Join(signedAPKPaths, "|")
+	signedBuildArtifactPth := strings.Join(signedBuildArtifactPaths, "|")
 
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedAPKPth); err != nil {
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedBuildArtifactPth); err != nil {
+		log.Warnf("Failed to export Build Artifact, error: %s", err)
+	}
+	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", signedBuildArtifactPth)
+
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_APK_PATH", signedBuildArtifactPth); err != nil {
 		log.Warnf("Failed to export APK, error: %s", err)
 	}
-	log.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", signedAPKPth)
-
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_APK_PATH", signedAPKPth); err != nil {
-		log.Warnf("Failed to export APK, error: %s", err)
-	}
-	log.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_APK_PATH (value: %s)", signedAPKPth)
+	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_APK_PATH (value: %s)", signedBuildArtifactPth)
 }

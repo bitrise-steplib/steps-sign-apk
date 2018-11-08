@@ -28,7 +28,7 @@ workflows:
     - errcheck:
     - go-test:
     after_run:
-    - test_apk
+    # - test_apk
     - test_bundle
 
   test_apk:
