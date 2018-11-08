@@ -109,7 +109,7 @@ func NewHelper(keystorePth, keystorePassword, alias string) (Helper, error) {
 	}, nil
 }
 
-func (helper Helper) createSignCmd(apkPth, destApkPth, privateKeyPassword string) ([]string, error) {
+func (helper Helper) createSignCmd(buildArtifactPth, destBuildArtifactPth, privateKeyPassword string) ([]string, error) {
 	split := strings.Split(helper.signatureAlgorithm, "with")
 	if len(split) != 2 {
 		return []string{}, fmt.Errorf("failed to parse signature algorithm: %s", helper.signatureAlgorithm)
@@ -139,20 +139,20 @@ func (helper Helper) createSignCmd(apkPth, destApkPth, privateKeyPassword string
 		cmdSlice = append(cmdSlice, "-keypass", privateKeyPassword)
 	}
 
-	cmdSlice = append(cmdSlice, "-signedjar", destApkPth, apkPth, helper.alias)
+	cmdSlice = append(cmdSlice, "-signedjar", destBuildArtifactPth, buildArtifactPth, helper.alias)
 
 	return cmdSlice, nil
 }
 
-// SignAPK ...
-func (helper Helper) SignAPK(apkPth, destApkPth, privateKeyPassword string) error {
-	if exist, err := pathutil.IsPathExists(apkPth); err != nil {
+// SignBuildArtifact ...
+func (helper Helper) SignBuildArtifact(buildArtifactPth, destBuildArtifactPth, privateKeyPassword string) error {
+	if exist, err := pathutil.IsPathExists(buildArtifactPth); err != nil {
 		return err
 	} else if !exist {
-		return fmt.Errorf("APK not exist at: %s", apkPth)
+		return fmt.Errorf("Build Artifact not exist at: %s", buildArtifactPth)
 	}
 
-	cmdSlice, err := helper.createSignCmd(apkPth, destApkPth, privateKeyPassword)
+	cmdSlice, err := helper.createSignCmd(buildArtifactPth, destBuildArtifactPth, privateKeyPassword)
 	if err != nil {
 		return err
 	}
@@ -170,14 +170,14 @@ func (helper Helper) SignAPK(apkPth, destApkPth, privateKeyPassword string) erro
 	return nil
 }
 
-// VerifyAPK ...
-func (helper Helper) VerifyAPK(apkPth string) error {
+// VerifyBuildArtifact ...
+func (helper Helper) VerifyBuildArtifact(buildArtifactPth string) error {
 	cmdSlice := []string{
 		jarsigner,
 		"-verify",
 		"-verbose",
 		"-certs",
-		apkPth,
+		buildArtifactPth,
 	}
 
 	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)

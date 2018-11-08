@@ -83,7 +83,7 @@ workflows:
     - install-missing-android-tools@2.3.3:
         inputs:
         - ndk_revision: '16'
-        run_if ".IsCI"
+        run_if: ".IsCI"
     - gradle-runner:
         inputs:
         - gradle_task: "$GRADLE_TASK"
