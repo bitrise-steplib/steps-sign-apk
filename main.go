@@ -30,7 +30,7 @@ var signingFileExts = []string{".mf", ".rsa", ".dsa", ".ec", ".sf"}
 
 // ConfigsModel ...
 type ConfigsModel struct {
-	ApkPath            string
+	BuildArtifactPath  string
 	KeystoreURL        string
 	KeystorePassword   string
 	KeystoreAlias      string
@@ -40,7 +40,7 @@ type ConfigsModel struct {
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	return ConfigsModel{
-		ApkPath:            os.Getenv("apk_path"),
+		BuildArtifactPath:  os.Getenv("apk_path"),
 		KeystoreURL:        os.Getenv("keystore_url"),
 		KeystorePassword:   os.Getenv("keystore_password"),
 		KeystoreAlias:      os.Getenv("keystore_alias"),
@@ -52,7 +52,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 func (configs ConfigsModel) print() {
 	fmt.Println()
 	log.Infof("Configs:")
-	log.Printf(" - ApkPath: %s", configs.ApkPath)
+	log.Printf(" - ApkPath: %s", configs.BuildArtifactPath)
 	log.Printf(" - KeystoreURL: %s", secureInput(configs.KeystoreURL))
 	log.Printf(" - KeystorePassword: %s", secureInput(configs.KeystorePassword))
 	log.Printf(" - KeystoreAlias: %s", configs.KeystoreAlias)
@@ -63,11 +63,11 @@ func (configs ConfigsModel) print() {
 
 func (configs ConfigsModel) validate() error {
 	// required
-	if configs.ApkPath == "" {
+	if configs.BuildArtifactPath == "" {
 		return errors.New("no ApkPath parameter specified")
 	}
 
-	buildArtifactPaths := strings.Split(configs.ApkPath, "|")
+	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
 	for _, buildArtifactPath := range buildArtifactPaths {
 		if exist, err := pathutil.IsPathExists(buildArtifactPath); err != nil {
 			return fmt.Errorf("failed to check if ApkPath exist at: %s, error: %s", buildArtifactPath, err)
@@ -342,7 +342,7 @@ func main() {
 	// ---
 
 	// Sign build artifacts
-	buildArtifactPaths := strings.Split(configs.ApkPath, "|")
+	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
 	signedBuildArtifactPaths := make([]string, len(buildArtifactPaths))
 
 	log.Infof("signing %d Build Artifacts", len(buildArtifactPaths))
