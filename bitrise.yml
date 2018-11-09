@@ -1,4 +1,4 @@
-format_version: 5
+format_version: 6
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
@@ -9,7 +9,6 @@ app:
 
   - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-samples/sample-apps-android-abi-split.git
   - BRANCH: master
-  - GRADLE_TASK: assembleRelease
   - GRADLEW_PATH: "./gradlew"
 
   # define these in your .bitrise.secrets.yml
@@ -24,8 +23,74 @@ workflows:
   ci:
     before_run:
     - audit-this-step
-    - _go_tests
-    - create_test_apk
+    steps:
+    - go-list:
+    - golint:
+    - errcheck:
+    - go-test:
+    after_run:
+    - test_apk
+    - test_bundle
+
+  test_apk:
+    envs:
+    - GRADLE_TASK: assembleRelease
+    - APK_FILE_INCLUDE_FILTER: "*.apk"
+    after_run:
+    - create_build_artifact
+    - test
+    
+  test_bundle:
+    envs:
+    - GRADLE_TASK: bundleRelease
+    - APK_FILE_INCLUDE_FILTER: "*.aab"
+    after_run:
+    - create_build_artifact
+    - test
+
+  create_build_artifact:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            rm -rf ./_tmp
+    - change-workdir:
+        title: Switch working dir to test/_tmp dir
+        run_if: true
+        inputs:
+        - path: ./_tmp
+        - is_create_path: true
+    - script:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -x
+
+            if [[ -z "${SAMPLE_APP_REPOSITORY_URL}" ]]; then
+              echo "error: there is no SAMPLE_APP_URL env var specified"
+              exit 1
+            elif [[ -z "${COMMIT}" && -z "${BRANCH}" ]]; then
+              echo "error: can't checkout: there is no BRANCH or COMMIT env var specified"
+              exit 1
+            fi
+
+            git init
+            git remote add origin "${SAMPLE_APP_REPOSITORY_URL}"
+            git fetch || exit 1
+            [[ -n "${COMMIT}" ]] && git checkout "${COMMIT}" || git checkout "${BRANCH}"
+    - install-missing-android-tools@2.3.3:
+        inputs:
+        - ndk_revision: '16'
+        run_if: ".IsCI"
+    - gradle-runner:
+        inputs:
+        - gradle_task: "$GRADLE_TASK"
+        - gradlew_path: "$GRADLEW_PATH"
+        - apk_file_include_filter: $APK_FILE_INCLUDE_FILTER
+
+  test:
     steps:
     - path::./:
         is_skippable: true
@@ -59,63 +124,6 @@ workflows:
         - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_4
         - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_4
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4
-
-  test:
-    before_run:
-    - audit-this-step
-    - _go_tests
-    - create_test_apk
-    steps:
-    - script:
-        inputs:
-        - content: |-
-            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH" 
-    - path::./:
-        title: Step Test
-        inputs:
-        - apk_path: $BITRISE_APK_PATH_LIST
-    - script:
-        inputs:
-        - content: |-
-            echo "BITRISE_SIGNED_APK_PATH: $BITRISE_SIGNED_APK_PATH"
-            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH" 
-
-  create_test_apk:
-    steps:
-    - script:
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-            rm -rf ./_tmp
-    - change-workdir:
-        title: Switch working dir to test/_tmp dir
-        run_if: true
-        inputs:
-        - path: ./_tmp
-        - is_create_path: true
-    - script:
-        inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            set -x
-
-            if [[ -z "${SAMPLE_APP_REPOSITORY_URL}" ]]; then
-              echo "error: there is no SAMPLE_APP_URL env var specified"
-              exit 1
-            elif [[ -z "${COMMIT}" && -z "${BRANCH}" ]]; then
-              echo "error: can't checkout: there is no BRANCH or COMMIT env var specified"
-              exit 1
-            fi
-
-            git init
-            git remote add origin "${SAMPLE_APP_REPOSITORY_URL}"
-            git fetch || exit 1
-            [[ -n "${COMMIT}" ]] && git checkout "${COMMIT}" || git checkout "${BRANCH}"
-    - gradle-runner:
-        inputs:
-        - gradle_task: "$GRADLE_TASK"
-        - gradlew_path: "$GRADLEW_PATH"
 
   _go_tests:
     steps:
