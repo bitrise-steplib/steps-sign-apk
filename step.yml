@@ -84,6 +84,14 @@ inputs:
       summary: ""
       description: |
         __deprecated!__ jarsigner options are detected from the keystore
+  - output_name: ""
+    opts:
+      title: "Artifact name"
+      summary: 'Name of the produced output artifact'
+      is_sensitive: false
+      description: |
+        If is empty then the output name is "app-release-bitrise-signed".
+        Else it's the specified name. Do not add extensione here.
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:

@@ -36,6 +36,7 @@ type ConfigsModel struct {
 	KeystoreAlias      string
 	PrivateKeyPassword string
 	JarsignerOptions   string
+	OutputName         string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -46,6 +47,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		KeystoreAlias:      os.Getenv("keystore_alias"),
 		PrivateKeyPassword: os.Getenv("private_key_password"),
 		JarsignerOptions:   os.Getenv("jarsigner_options"),
+		OutputName:         os.Getenv("output_name"),
 	}
 }
 
@@ -58,6 +60,7 @@ func (configs ConfigsModel) print() {
 	log.Printf(" - KeystoreAlias: %s", configs.KeystoreAlias)
 	log.Printf(" - PrivateKeyPassword: %s", secureInput(configs.PrivateKeyPassword))
 	log.Printf(" - JarsignerOptions: %s", configs.JarsignerOptions)
+	log.Printf(" - OutputName: %s", configs.OutputName)
 	fmt.Println()
 }
 
@@ -395,6 +398,9 @@ func main() {
 
 		log.Infof("Zipalign Build Artifact")
 		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
+		if configs.OutputName != "" {
+			signedArtifactName = fmt.Sprintf("%s%s", configs.OutputName, artifactExt)
+		}
 		signedBuildArtifactPaths[i] = filepath.Join(buildArtifactDir, signedArtifactName)
 		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, signedBuildArtifactPaths[i]); err != nil {
 			failf("Failed to zipalign Build Artifact, error: %s", err)
