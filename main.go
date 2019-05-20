@@ -48,10 +48,12 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		JarsignerOptions:   os.Getenv("jarsigner_options"),
 	}
 
-	if val := os.Getenv("apk_path") != "" {
+	if val := os.Getenv("apk_path"); val != "" {
 		log.Warnf("APK_PATH env detected. APK_PATH will be deprecated in future versions! Please use ANDROID_APP instead. Using APK_PATH value for current build.")
 		cfg.BuildArtifactPath = val
 	}
+
+	return cfg
 }
 
 func (configs ConfigsModel) print() {
