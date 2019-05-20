@@ -40,7 +40,7 @@ type ConfigsModel struct {
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	return ConfigsModel{
-		BuildArtifactPath:  os.Getenv("apk_path"),
+		BuildArtifactPath:  os.Getenv("android_app"),
 		KeystoreURL:        os.Getenv("keystore_url"),
 		KeystorePassword:   os.Getenv("keystore_password"),
 		KeystoreAlias:      os.Getenv("keystore_alias"),
@@ -52,7 +52,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 func (configs ConfigsModel) print() {
 	fmt.Println()
 	log.Infof("Configs:")
-	log.Printf(" - ApkPath: %s", configs.BuildArtifactPath)
+	log.Printf(" - BuildArtifactPath: %s", configs.BuildArtifactPath)
 	log.Printf(" - KeystoreURL: %s", secureInput(configs.KeystoreURL))
 	log.Printf(" - KeystorePassword: %s", secureInput(configs.KeystorePassword))
 	log.Printf(" - KeystoreAlias: %s", configs.KeystoreAlias)
@@ -64,15 +64,15 @@ func (configs ConfigsModel) print() {
 func (configs ConfigsModel) validate() error {
 	// required
 	if configs.BuildArtifactPath == "" {
-		return errors.New("no ApkPath parameter specified")
+		return errors.New("no BuildArtifactPath parameter specified")
 	}
 
 	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
 	for _, buildArtifactPath := range buildArtifactPaths {
 		if exist, err := pathutil.IsPathExists(buildArtifactPath); err != nil {
-			return fmt.Errorf("failed to check if ApkPath exist at: %s, error: %s", buildArtifactPath, err)
+			return fmt.Errorf("failed to check if BuildArtifactPath exist at: %s, error: %s", buildArtifactPath, err)
 		} else if !exist {
-			return fmt.Errorf("ApkPath not exist at: %s", buildArtifactPath)
+			return fmt.Errorf("BuildArtifactPath not exist at: %s", buildArtifactPath)
 		}
 	}
 

@@ -30,7 +30,7 @@ toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-sign-apk
 inputs:
-  - apk_path: "$BITRISE_APK_PATH"
+  - android_app: "$BITRISE_APK_PATH\n$BITRISE_AAB_PATH"
     opts:
       title: "Build artifact path."
       summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`"
