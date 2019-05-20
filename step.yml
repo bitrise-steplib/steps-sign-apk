@@ -1,5 +1,5 @@
-title: "Sign APK"
-summary: Sign APK
+title: "Android Sign"
+summary: Android Sign
 description: 
   With this step, you can digitally sign your app's APK file in your workflow. 
   All you have to do is upload your keystore file in the Code signing tab of the Workflow Editor.
