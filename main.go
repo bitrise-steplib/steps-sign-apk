@@ -358,7 +358,7 @@ func main() {
 	// ---
 
 	// Sign build artifacts
-	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
+	buildArtifactPaths := filterNonEmpty(strings.Split(configs.BuildArtifactPath, "|"))
 	signedBuildArtifactPaths := make([]string, len(buildArtifactPaths))
 
 	log.Infof("signing %d Build Artifacts", len(buildArtifactPaths))
