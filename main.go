@@ -84,7 +84,7 @@ func (configs ConfigsModel) validate() error {
 		return errors.New("no BuildArtifactPath parameter specified")
 	}
 
-	buildArtifactPaths := filterNonEmpty(strings.Split(configs.BuildArtifactPath, "|"))
+	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
 	for _, buildArtifactPath := range buildArtifactPaths {
 		if exist, err := pathutil.IsPathExists(buildArtifactPath); err != nil {
 			return fmt.Errorf("failed to check if BuildArtifactPath exist at: %s, error: %s", buildArtifactPath, err)
@@ -111,15 +111,6 @@ func (configs ConfigsModel) validate() error {
 // -----------------------
 // --- Functions
 // -----------------------
-
-func filterNonEmpty(slice []string) (nonEmpties []string) {
-	for _, s := range slice {
-		if strings.TrimSpace(s) != "" {
-			nonEmpties = append(nonEmpties, s)
-		}
-	}
-	return nonEmpties
-}
 
 func secureInput(str string) string {
 	if str == "" {
@@ -368,7 +359,7 @@ func main() {
 	// ---
 
 	// Sign build artifacts
-	buildArtifactPaths := filterNonEmpty(strings.Split(configs.BuildArtifactPath, "|"))
+	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
 	signedBuildArtifactPaths := make([]string, len(buildArtifactPaths))
 
 	log.Infof("signing %d Build Artifacts", len(buildArtifactPaths))
