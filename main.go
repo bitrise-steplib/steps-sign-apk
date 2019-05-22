@@ -40,7 +40,6 @@ type ConfigsModel struct {
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	cfg := ConfigsModel{
-		BuildArtifactPath:  os.Getenv("android_app"),
 		KeystoreURL:        os.Getenv("keystore_url"),
 		KeystorePassword:   os.Getenv("keystore_password"),
 		KeystoreAlias:      os.Getenv("keystore_alias"),
@@ -51,6 +50,17 @@ func createConfigsModelFromEnvs() ConfigsModel {
 	if val := os.Getenv("apk_path"); val != "" {
 		log.Warnf("APK_PATH env detected. APK_PATH will be deprecated in future versions! Please use ANDROID_APP instead. Using APK_PATH value for current build.")
 		cfg.BuildArtifactPath = val
+		return cfg
+	}
+
+	if inputEnv := os.Getenv("android_app"); strings.Contains(inputEnv, "\n") {
+		lines := strings.Split(inputEnv, "\n")
+
+		if trimmed := strings.TrimSpace(lines[0]); trimmed != "" {
+			cfg.BuildArtifactPath = trimmed
+		} else {
+			cfg.BuildArtifactPath = lines[1]
+		}
 	}
 
 	return cfg
