@@ -420,6 +420,7 @@ func main() {
 			case "aab":
 				signedAABPaths = append(signedAABPaths, fullPath)
 			default:
+				signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
 		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, signedAPKPaths[i]); err != nil {
 			failf("Failed to zipalign Build Artifact, error: %s", err)
