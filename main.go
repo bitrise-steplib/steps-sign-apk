@@ -361,6 +361,7 @@ func main() {
 	// Sign build artifacts
 	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
 	signedAPKPaths := make([]string, len(buildArtifactPaths))
+	signedAABPaths := make([]string, len(buildArtifactPaths))
 
 	log.Infof("signing %d Build Artifacts", len(buildArtifactPaths))
 	fmt.Println()
@@ -417,6 +418,7 @@ func main() {
 			case "apk":
 				signedAPKPaths = append(signedAPKPaths, fullPath)
 			case "aab":
+				signedAABPaths = append(signedAABPaths, fullPath)
 			default:
 		}
 		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, signedAPKPaths[i]); err != nil {
