@@ -430,6 +430,7 @@ func main() {
 	}
 
 	signedBuildArtifactPth := strings.Join(signedAPKPaths, "|")
+	joinedAABOutputPaths := strings.Join(signedAABPaths, "|")
 
 	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedBuildArtifactPth); err != nil {
 		log.Warnf("Failed to export Build Artifact, error: %s", err)
@@ -440,4 +441,14 @@ func main() {
 		log.Warnf("Failed to export Build Artifact, error: %s", err)
 	}
 	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_APK_PATH (value: %s)", signedBuildArtifactPth)
+
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH", joinedAABOutputPaths); err != nil {
+		log.Warnf("Failed to export Build Artifact, error: %s", err)
+	}
+	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH (value: %s)", joinedAABOutputPaths)
+	
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_AAB_PATH", joinedAABOutputPaths); err != nil {
+		log.Warnf("Failed to export Build Artifact, error: %s", err)
+	}
+	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_AAB_PATH (value: %s)", joinedAABOutputPaths)
 }

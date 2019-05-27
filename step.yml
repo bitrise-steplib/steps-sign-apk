@@ -91,3 +91,9 @@ outputs:
 - BITRISE_APK_PATH:
   opts:
     title: "Bitrise signed build artifact path"
+- BITRISE_SIGNED_AAB_PATH:
+  opts:
+    title: "Bitrise signed build artifact path"
+- BITRISE_AAB_PATH:
+  opts:
+    title: "Bitrise signed build artifact path"
