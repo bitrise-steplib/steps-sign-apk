@@ -360,8 +360,8 @@ func main() {
 
 	// Sign build artifacts
 	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
-	signedAPKPaths := make([]string, len(buildArtifactPaths))
-	signedAABPaths := make([]string, len(buildArtifactPaths))
+	signedAPKPaths := make([]string, 0)
+	signedAABPaths := make([]string, 0)
 
 	log.Infof("signing %d Build Artifacts", len(buildArtifactPaths))
 	fmt.Println()
@@ -422,7 +422,7 @@ func main() {
 		default:
 			signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
-		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, signedAPKPaths[i]); err != nil {
+		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath); err != nil {
 			failf("Failed to zipalign Build Artifact, error: %s", err)
 		}
 		fmt.Println()
