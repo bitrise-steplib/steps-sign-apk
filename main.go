@@ -415,12 +415,12 @@ func main() {
 		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
 		fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 		switch artifactExt {
-			case "apk":
-				signedAPKPaths = append(signedAPKPaths, fullPath)
-			case "aab":
-				signedAABPaths = append(signedAABPaths, fullPath)
-			default:
-				signedAPKPaths = append(signedAPKPaths, fullPath)
+		case "apk":
+			signedAPKPaths = append(signedAPKPaths, fullPath)
+		case "aab":
+			signedAABPaths = append(signedAABPaths, fullPath)
+		default:
+			signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
 		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, signedAPKPaths[i]); err != nil {
 			failf("Failed to zipalign Build Artifact, error: %s", err)
@@ -446,7 +446,7 @@ func main() {
 		log.Warnf("Failed to export Build Artifact, error: %s", err)
 	}
 	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH (value: %s)", joinedAABOutputPaths)
-	
+
 	if err := tools.ExportEnvironmentWithEnvman("BITRISE_AAB_PATH", joinedAABOutputPaths); err != nil {
 		log.Warnf("Failed to export Build Artifact, error: %s", err)
 	}
