@@ -360,7 +360,7 @@ func main() {
 
 	// Sign build artifacts
 	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
-	signedBuildArtifactPaths := make([]string, len(buildArtifactPaths))
+	signedAPKPaths := make([]string, len(buildArtifactPaths))
 
 	log.Infof("signing %d Build Artifacts", len(buildArtifactPaths))
 	fmt.Println()
@@ -412,15 +412,15 @@ func main() {
 
 		log.Infof("Zipalign Build Artifact")
 		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
-		signedBuildArtifactPaths[i] = filepath.Join(buildArtifactDir, signedArtifactName)
-		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, signedBuildArtifactPaths[i]); err != nil {
+		signedAPKPaths[i] = filepath.Join(buildArtifactDir, signedArtifactName)
+		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, signedAPKPaths[i]); err != nil {
 			failf("Failed to zipalign Build Artifact, error: %s", err)
 		}
 		fmt.Println()
 		// ---
 	}
 
-	signedBuildArtifactPth := strings.Join(signedBuildArtifactPaths, "|")
+	signedBuildArtifactPth := strings.Join(signedAPKPaths, "|")
 
 	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedBuildArtifactPth); err != nil {
 		log.Warnf("Failed to export Build Artifact, error: %s", err)
