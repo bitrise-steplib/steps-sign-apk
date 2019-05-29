@@ -48,7 +48,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 	}
 
 	if val := os.Getenv("apk_path"); val != "" {
-		log.Warnf("APK_PATH env detected. APK_PATH will be deprecated in future versions! Please use ANDROID_APP instead. Using APK_PATH value for current build.")
+		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
 		cfg.BuildArtifactPath = val
 		return cfg
 	}
