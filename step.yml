@@ -30,12 +30,14 @@ toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-sign-apk
 inputs:
-  - apk_path: "$BITRISE_APK_PATH"
+  - apk_path:
     opts:
       title: "[DEPRECATED] Build artifact path."
-      category: DEPRECATED configs
+      category: Deprecated
       summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`. Deprecated, use `android_app` instead."
       description: |-
+        __This input is deprecated and will be removed on 20 August 2019, use `App file path` input instead!__
+
         Path(s) to the build artifact file to sign (`.aab` or `.apk`).
 
         You can provide multiple build artifact file paths separated by `|` character.
@@ -52,7 +54,7 @@ inputs:
       is_required: true
   - android_app: "$BITRISE_APK_PATH\n$BITRISE_AAB_PATH"
     opts:
-      title: "Build artifact path."
+      title: "App file path."
       summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`"
       description: |-
         Path(s) to the build artifact file to sign (`.aab` or `.apk`).
