@@ -67,6 +67,7 @@ func parseAppList(list string) (apps []string) {
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	cfg := ConfigsModel{
+		BuildArtifactPath:  os.Getenv("android_app"),
 		KeystoreURL:        os.Getenv("keystore_url"),
 		KeystorePassword:   os.Getenv("keystore_password"),
 		KeystoreAlias:      os.Getenv("keystore_alias"),
