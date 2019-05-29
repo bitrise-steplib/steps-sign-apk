@@ -38,6 +38,33 @@ type ConfigsModel struct {
 	JarsignerOptions   string
 }
 
+func splitElements(list []string, sep string) (s []string) {
+	for _, e := range list {
+		s = append(s, strings.Split(e, sep)...)
+	}
+	return
+}
+
+func parseAppList(list string) (apps []string) {
+	list = strings.TrimSpace(list)
+	if len(list) == 0 {
+		return nil
+	}
+
+	s := []string{list}
+	for _, sep := range []string{"\n", `\n`, "|"} {
+		s = splitElements(s, sep)
+	}
+
+	for _, app := range s {
+		app = strings.TrimSpace(app)
+		if len(app) > 0 {
+			apps = append(apps, app)
+		}
+	}
+	return
+}
+
 func createConfigsModelFromEnvs() ConfigsModel {
 	cfg := ConfigsModel{
 		KeystoreURL:        os.Getenv("keystore_url"),
@@ -51,16 +78,6 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
 		cfg.BuildArtifactPath = val
 		return cfg
-	}
-
-	if inputEnv := os.Getenv("android_app"); strings.Contains(inputEnv, "\n") {
-		lines := strings.Split(inputEnv, "\n")
-
-		if trimmed := strings.TrimSpace(lines[0]); trimmed != "" {
-			cfg.BuildArtifactPath = trimmed
-		} else {
-			cfg.BuildArtifactPath = lines[1]
-		}
 	}
 
 	return cfg
@@ -84,7 +101,7 @@ func (configs ConfigsModel) validate() error {
 		return errors.New("no BuildArtifactPath parameter specified")
 	}
 
-	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
+	buildArtifactPaths := parseAppList(configs.BuildArtifactPath)
 	for _, buildArtifactPath := range buildArtifactPaths {
 		if exist, err := pathutil.IsPathExists(buildArtifactPath); err != nil {
 			return fmt.Errorf("failed to check if BuildArtifactPath exist at: %s, error: %s", buildArtifactPath, err)
@@ -359,7 +376,7 @@ func main() {
 	// ---
 
 	// Sign build artifacts
-	buildArtifactPaths := strings.Split(configs.BuildArtifactPath, "|")
+	buildArtifactPaths := parseAppList(configs.BuildArtifactPath)
 	signedAPKPaths := make([]string, 0)
 	signedAABPaths := make([]string, 0)
 
