@@ -431,14 +431,13 @@ func main() {
 		log.Infof("Zipalign Build Artifact")
 		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
 		fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
-		switch artifactExt {
-		case "apk":
-			signedAPKPaths = append(signedAPKPaths, fullPath)
-		case "aab":
+
+		if artifactExt == "aab" {
 			signedAABPaths = append(signedAABPaths, fullPath)
-		default:
+		} else {
 			signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
+
 		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath); err != nil {
 			failf("Failed to zipalign Build Artifact, error: %s", err)
 		}
