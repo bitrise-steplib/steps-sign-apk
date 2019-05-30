@@ -109,21 +109,29 @@ inputs:
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
-    title: "Bitrise signed build artifact path"
-    summary: "Contains the signed APKs"
-    description: "Contains the signed APKs. AAB files are exported in a separate variable."
+    title: "Path of the generated APK"
+    summary: "Path of the signed APK"
+    description: |-
+       This output will include the path(s) of the generated APK(s).
+       If multiple APKs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.apk|app-mips-debug.apk|app-x86-debug.apk`
 - BITRISE_APK_PATH:
   opts:
-    title: "Bitrise signed build artifact path"
-    summary: "Contains the signed APKs"
-    description: "Contains the signed APKs. AAB files are exported in a separate variable."
+    title: "Path of the generated APK"
+    summary: "Path of the signed APK"
+    description: |-
+       This output will include the path(s) of the generated APK(s).
+       If multiple APKs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.apk|app-mips-debug.apk|app-x86-debug.apk`
 - BITRISE_SIGNED_AAB_PATH:
   opts:
-    title: "Bitrise signed build artifact path"
-    summary: "Contains the signed Android app bundles"
-    description: "Contains the signed AABs. APK files are exported in a separate variable."
+    title: "Path of the generated AAB"
+    summary: "Path of the signed AAB"
+    description: |-
+       This output will include the path(s) of the generated AAB(s).
+       If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`
 - BITRISE_AAB_PATH:
   opts:
-    title: "Bitrise signed build artifact path"
-    summary: "Contains the signed Android app bundles"
-    description: "Contains the signed AABs. APK files are exported in a separate variable."
+    title: "Path of the generated AAB"
+    summary: "Path of the signed AAB"
+    description: |-
+       This output will include the path(s) of the generated AAB(s).
+       If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`
