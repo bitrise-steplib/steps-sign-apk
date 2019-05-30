@@ -110,12 +110,20 @@ outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
     title: "Bitrise signed build artifact path"
+    summary: "Contains the signed APKs"
+    description: "Contains the signed APKs. AAB files are exported in a separate variable."
 - BITRISE_APK_PATH:
   opts:
     title: "Bitrise signed build artifact path"
+    summary: "Contains the signed APKs"
+    description: "Contains the signed APKs. AAB files are exported in a separate variable."
 - BITRISE_SIGNED_AAB_PATH:
   opts:
     title: "Bitrise signed build artifact path"
+    summary: "Contains the signed Android app bundles"
+    description: "Contains the signed AABs. APK files are exported in a separate variable."
 - BITRISE_AAB_PATH:
   opts:
     title: "Bitrise signed build artifact path"
+    summary: "Contains the signed Android app bundles"
+    description: "Contains the signed AABs. APK files are exported in a separate variable."
