@@ -75,7 +75,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		JarsignerOptions:   os.Getenv("jarsigner_options"),
 	}
 
-	if val := os.Getenv("APK_PATH"); val != "" {
+	if val := os.Getenv("apk_path"); val != "" {
 		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
 		cfg.BuildArtifactPath = val
 	}
