@@ -75,7 +75,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		JarsignerOptions:   os.Getenv("jarsigner_options"),
 	}
 
-	if val := os.Getenv("apk_path"); val != "" {
+	if val := os.Getenv("APK_PATH"); val != "" {
 		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
 		cfg.BuildArtifactPath = val
 	}
@@ -432,7 +432,7 @@ func main() {
 		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
 		fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
-		if artifactExt == "aab" {
+		if artifactExt == ".aab" {
 			signedAABPaths = append(signedAABPaths, fullPath)
 		} else {
 			signedAPKPaths = append(signedAPKPaths, fullPath)
