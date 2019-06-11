@@ -386,6 +386,12 @@ func main() {
 	log.Infof("signing %d Build Artifacts", len(buildArtifactPaths))
 	fmt.Println()
 
+	if len(buildArtifactPaths) > 1 && configs.OutputName != "" {
+		log.Warnf("output_name is set and more than one artifact found, disabling artifact renaming as it would result in overwriting exported artifacts")
+		fmt.Println()
+		configs.OutputName = ""
+	}
+
 	for i, buildArtifactPath := range buildArtifactPaths {
 		artifactExt := path.Ext(buildArtifactPath)
 		log.Donef("%d/%d signing %s", i+1, len(buildArtifactPaths), buildArtifactPath)
@@ -433,8 +439,9 @@ func main() {
 
 		log.Infof("Zipalign Build Artifact")
 		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
-		if configs.OutputName != "" {
-			signedArtifactName = fmt.Sprintf("%s%s", configs.OutputName, artifactExt)
+		if artifactName := fmt.Sprintf("%s%s", configs.OutputName, artifactExt); configs.OutputName != "" {
+			log.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
+			signedArtifactName = artifactName
 		}
 		fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
