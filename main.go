@@ -439,8 +439,9 @@ func main() {
 
 		log.Infof("Zipalign Build Artifact")
 		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
-		if configs.OutputName != "" {
-			signedArtifactName = fmt.Sprintf("%s%s", configs.OutputName, artifactExt)
+		if artifactName := fmt.Sprintf("%s%s", configs.OutputName, artifactExt); configs.OutputName != "" {
+			log.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
+			signedArtifactName = artifactName
 		}
 		fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
