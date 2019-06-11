@@ -36,6 +36,7 @@ type ConfigsModel struct {
 	KeystoreAlias      string
 	PrivateKeyPassword string
 	JarsignerOptions   string
+	OutputName         string
 }
 
 func splitElements(list []string, sep string) (s []string) {
@@ -73,6 +74,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		KeystoreAlias:      os.Getenv("keystore_alias"),
 		PrivateKeyPassword: os.Getenv("private_key_password"),
 		JarsignerOptions:   os.Getenv("jarsigner_options"),
+		OutputName:         os.Getenv("output_name"),
 	}
 
 	if val := os.Getenv("apk_path"); val != "" {
@@ -92,6 +94,7 @@ func (configs ConfigsModel) print() {
 	log.Printf(" - KeystoreAlias: %s", configs.KeystoreAlias)
 	log.Printf(" - PrivateKeyPassword: %s", secureInput(configs.PrivateKeyPassword))
 	log.Printf(" - JarsignerOptions: %s", configs.JarsignerOptions)
+	log.Printf(" - OutputName: %s", configs.OutputName)
 	fmt.Println()
 }
 
@@ -430,6 +433,9 @@ func main() {
 
 		log.Infof("Zipalign Build Artifact")
 		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
+		if configs.OutputName != "" {
+			signedArtifactName = fmt.Sprintf("%s%s", configs.OutputName, artifactExt)
+		}
 		fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
 		if artifactExt == ".aab" {
