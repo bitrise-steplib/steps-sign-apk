@@ -1,5 +1,5 @@
-title: "Sign APK"
-summary: Sign APK
+title: "Android Sign"
+summary: Android Sign
 description: 
   With this step, you can digitally sign your app's APK file in your workflow. 
   All you have to do is upload your keystore file in the Code signing tab of the Workflow Editor.
@@ -30,9 +30,31 @@ toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-sign-apk
 inputs:
-  - apk_path: "$BITRISE_APK_PATH"
+  - apk_path:
     opts:
-      title: "Build artifact path."
+      title: "[DEPRECATED] Build artifact path."
+      category: Deprecated
+      summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`. Deprecated, use `android_app` instead."
+      description: |-
+        __This input is deprecated and will be removed on 20 August 2019, use `App file path` input instead!__
+
+        Path(s) to the build artifact file to sign (`.aab` or `.apk`).
+
+        You can provide multiple build artifact file paths separated by `|` character.
+
+        Deprecated, use `android_app` instead.
+
+        Format examples:
+
+        - `/path/to/my/app.apk`
+        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
+
+        - `/path/to/my/app.aab`
+        - `/path/to/my/app1.aab|/path/to/my/app2.apk|/path/to/my/app3.aab`
+      is_required: true
+  - android_app: "$BITRISE_APK_PATH\n$BITRISE_AAB_PATH"
+    opts:
+      title: "App file path."
       summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`"
       description: |-
         Path(s) to the build artifact file to sign (`.aab` or `.apk`).
@@ -95,7 +117,29 @@ inputs:
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
-    title: "Bitrise signed build artifact path"
+    title: "Path of the signed APK"
+    summary: "Path of the signed APK"
+    description: |-
+       This output will include the path(s) of the signed APK(s).
+       If multiple APKs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.apk|app-mips-debug.apk|app-x86-debug.apk`
 - BITRISE_APK_PATH:
   opts:
-    title: "Bitrise signed build artifact path"
+    title: "Path of the signed APK"
+    summary: "Path of the signed APK"
+    description: |-
+       This output will include the path(s) of the signed APK(s).
+       If multiple APKs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.apk|app-mips-debug.apk|app-x86-debug.apk`
+- BITRISE_SIGNED_AAB_PATH:
+  opts:
+    title: "Path of the signed AAB"
+    summary: "Path of the signed AAB"
+    description: |-
+       This output will include the path(s) of the signed AAB(s).
+       If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`
+- BITRISE_AAB_PATH:
+  opts:
+    title: "Path of the signed AAB"
+    summary: "Path of the signed AAB"
+    description: |-
+       This output will include the path(s) of the signed AAB(s).
+       If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`
