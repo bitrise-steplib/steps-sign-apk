@@ -124,6 +124,24 @@ workflows:
         - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_4
         - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_4
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4
+    - path::./:
+        is_skippable: true
+        title: Step Test - android studio generated keystore (jks) + custom artifact name
+        inputs:
+        - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_4_URL
+        - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_4
+        - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_4
+        - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4
+        - output_name: "test-artifact-name"
+    - path::./:
+        is_skippable: true
+        title: Step Test - android studio generated keystore (jks) + custom artifact name second time to see collisions if any
+        inputs:
+        - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_4_URL
+        - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_4
+        - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_4
+        - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4
+        - output_name: "test-artifact-name"
 
   _go_tests:
     steps:
