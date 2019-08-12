@@ -120,26 +120,26 @@ outputs:
     title: "Path of the signed APK"
     summary: "Path of the signed APK"
     description: |-
-       This output will include the path(s) of the signed APK(s).
-       If multiple APKs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.apk|app-mips-debug.apk|app-x86-debug.apk`
-- BITRISE_APK_PATH:
-  opts:
-    title: "Path of the signed APK"
-    summary: "Path of the signed APK"
-    description: |-
-       This output will include the path(s) of the signed APK(s).
+       This output will include the path of the signed APK.
+       If the build generates more than one APK this output will contain the last one's path.
+- BITRISE_SIGNED_APK_PATH_LIST:
+    opts:
+      title: "List of the signed APK paths"
+      summary: "List of the signed (and copied) APK paths"
+      description: |-
+        This output will include the paths of the generated APKs
        If multiple APKs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.apk|app-mips-debug.apk|app-x86-debug.apk`
 - BITRISE_SIGNED_AAB_PATH:
   opts:
     title: "Path of the signed AAB"
     summary: "Path of the signed AAB"
     description: |-
-       This output will include the path(s) of the signed AAB(s).
-       If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`
-- BITRISE_AAB_PATH:
-  opts:
-    title: "Path of the signed AAB"
-    summary: "Path of the signed AAB"
-    description: |-
-       This output will include the path(s) of the signed AAB(s).
-       If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`
+       This output will include the path of the signed AAB.
+       If the build generates more than one AAB this output will contain the last one's path.
+- BITRISE_SIGNED_AAB_PATH_LIST:
+    opts:
+      title: "List of the signed AAB paths"
+      summary: "List of the signed (and copied) AAB paths"
+      description: |-
+        This output will include the paths of the generated AABs.
+        If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`
