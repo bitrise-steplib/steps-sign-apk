@@ -30,7 +30,7 @@ var signingFileExts = []string{".mf", ".rsa", ".dsa", ".ec", ".sf"}
 // -----------------------
 
 type configs struct {
-	BuildArtifactPath  string `env:"android_app,file"`
+	BuildArtifactPath  string `env:"android_app,required"`
 	KeystoreURL        string `env:"keystore_url,required"`
 	KeystorePassword   string `env:"keystore_password,required"`
 	KeystoreAlias      string `env:"keystore_alias,required"`
@@ -260,6 +260,23 @@ func failf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
+func validate(cfg *configs) error {
+	if cfg.APKPath != "" {
+		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
+		cfg.BuildArtifactPath = cfg.APKPath
+	}
+
+	buildArtifactPaths := parseAppList(cfg.BuildArtifactPath)
+	for _, buildArtifactPath := range buildArtifactPaths {
+		if exist, err := pathutil.IsPathExists(buildArtifactPath); err != nil {
+			return fmt.Errorf("failed to check if BuildArtifactPath exist at: %s, error: %s", buildArtifactPath, err)
+		} else if !exist {
+			return fmt.Errorf("BuildArtifactPath not exist at: %s", buildArtifactPath)
+		}
+	}
+	return nil
+}
+
 // -----------------------
 // --- Main
 // -----------------------
@@ -273,9 +290,8 @@ func main() {
 	log.SetEnableDebugLog(cfg.VerboseLog)
 	fmt.Println()
 
-	if cfg.APKPath != "" {
-		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
-		cfg.BuildArtifactPath = cfg.APKPath
+	if err := validate(&cfg); err != nil {
+		failf("Issue with input: %s", err)
 	}
 
 	// Download keystore
