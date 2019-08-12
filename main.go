@@ -433,15 +433,15 @@ func main() {
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedAPKPaths[len(signedAPKPaths)-1]); err != nil {
 			log.Warnf("Failed to export Build Artifact, error: %s", err)
 		}
-		log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", signedAPKPaths[len(signedAPKPaths)-1])
+		log.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", signedAPKPaths[len(signedAPKPaths)-1])
 
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH_LIST", joinedAPKOutputPaths); err != nil {
-			log.Warnf("Failed to export Build Artifact, error: %s", err)
+			log.Warnf("Failed to export APK, error: %s", err)
 		}
-		log.Donef("The Signed Build Artifact path list is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH_LIST (value: %s)", joinedAPKOutputPaths)
+		log.Donef("The Signed APK path list is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH_LIST (value: %s)", joinedAPKOutputPaths)
 	} else {
-		log.Debugf("No Signed Build Artifact was exported - skip BITRISE_SIGNED_APK_PATH Environment Variable export")
-		log.Debugf("No Signed Build Artifact was exported - skip BITRISE_SIGNED_APK_PATH_LIST Environment Variable export")
+		log.Debugf("No Signed APK was exported - skip BITRISE_SIGNED_APK_PATH Environment Variable export")
+		log.Debugf("No Signed APK was exported - skip BITRISE_SIGNED_APK_PATH_LIST Environment Variable export")
 	}
 
 	// AAB
@@ -449,14 +449,14 @@ func main() {
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH", signedAABPaths[len(signedAABPaths)-1]); err != nil {
 			log.Warnf("Failed to export Build Artifact, error: %s", err)
 		}
-		log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH (value: %s)", signedAABPaths[len(signedAABPaths)-1])
+		log.Donef("The Signed AAB path is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH (value: %s)", signedAABPaths[len(signedAABPaths)-1])
 
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH_LIST", joinedAABOutputPaths); err != nil {
-			log.Warnf("Failed to export Build Artifact, error: %s", err)
+			log.Warnf("Failed to export AAB, error: %s", err)
 		}
-		log.Donef("The Signed Build Artifact path list is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH_LIST (value: %s)", joinedAABOutputPaths)
+		log.Donef("The Signed AAB path list is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH_LIST (value: %s)", joinedAABOutputPaths)
 	} else {
-		log.Debugf("No Signed Build Artifact was exported - skip BITRISE_SIGNED_AAB_PATH Environment Variable export")
-		log.Debugf("No Signed Build Artifact was exported - skip BITRISE_SIGNED_AAB_PATH_LIST Environment Variable export")
+		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH Environment Variable export")
+		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH_LIST Environment Variable export")
 	}
 }
