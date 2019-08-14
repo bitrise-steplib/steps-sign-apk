@@ -260,12 +260,14 @@ func failf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
-func validate(cfg *configs) error {
+func handleDeprecatedInputs(cfg *configs) {
 	if cfg.APKPath != "" {
 		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
 		cfg.BuildArtifactPath = cfg.APKPath
 	}
+}
 
+func validate(cfg configs) error {
 	buildArtifactPaths := parseAppList(cfg.BuildArtifactPath)
 	for _, buildArtifactPath := range buildArtifactPaths {
 		if exist, err := pathutil.IsPathExists(buildArtifactPath); err != nil {
@@ -288,9 +290,10 @@ func main() {
 
 	stepconf.Print(cfg)
 	log.SetEnableDebugLog(cfg.VerboseLog)
+	handleDeprecatedInputs(&cfg)
 	fmt.Println()
 
-	if err := validate(&cfg); err != nil {
+	if err := validate(cfg); err != nil {
 		failf("Issue with input: %s", err)
 	}
 
