@@ -434,12 +434,12 @@ func main() {
 	// APK
 	if len(signedAPKPaths) > 0 {
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedAPKPaths[len(signedAPKPaths)-1]); err != nil {
-			log.Warnf("Failed to export Build Artifact, error: %s", err)
+			log.Warnf("Failed to export APK (%s) error: %s", signedAPKPaths[len(signedAPKPaths)-1], err)
 		}
 		log.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", signedAPKPaths[len(signedAPKPaths)-1])
 
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH_LIST", joinedAPKOutputPaths); err != nil {
-			log.Warnf("Failed to export APK, error: %s", err)
+			log.Warnf("Failed to export APK list (%s), error: %s", joinedAPKOutputPaths, err)
 		}
 		log.Donef("The Signed APK path list is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH_LIST (value: %s)", joinedAPKOutputPaths)
 	} else {
@@ -450,12 +450,12 @@ func main() {
 	// AAB
 	if len(signedAABPaths) > 0 {
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH", signedAABPaths[len(signedAABPaths)-1]); err != nil {
-			log.Warnf("Failed to export Build Artifact, error: %s", err)
+			log.Warnf("Failed to export AAB (%s), error: %s", signedAABPaths[len(signedAABPaths)-1], err)
 		}
 		log.Donef("The Signed AAB path is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH (value: %s)", signedAABPaths[len(signedAABPaths)-1])
 
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH_LIST", joinedAABOutputPaths); err != nil {
-			log.Warnf("Failed to export AAB, error: %s", err)
+			log.Warnf("Failed to export AAB list (%s), error: %s", joinedAABOutputPaths, err)
 		}
 		log.Donef("The Signed AAB path list is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH_LIST (value: %s)", joinedAABOutputPaths)
 	} else {
