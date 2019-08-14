@@ -11,6 +11,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
@@ -28,15 +29,19 @@ var signingFileExts = []string{".mf", ".rsa", ".dsa", ".ec", ".sf"}
 // --- Models
 // -----------------------
 
-// ConfigsModel ...
-type ConfigsModel struct {
-	BuildArtifactPath  string
-	KeystoreURL        string
-	KeystorePassword   string
-	KeystoreAlias      string
-	PrivateKeyPassword string
-	JarsignerOptions   string
-	OutputName         string
+type configs struct {
+	BuildArtifactPath  string `env:"android_app,required"`
+	KeystoreURL        string `env:"keystore_url,required"`
+	KeystorePassword   string `env:"keystore_password,required"`
+	KeystoreAlias      string `env:"keystore_alias,required"`
+	PrivateKeyPassword string `env:"private_key_password"`
+	JarsignerOptions   string `env:"jarsigner_options"`
+	OutputName         string `env:"output_name"`
+
+	VerboseLog bool `env:"verbose_log,opt[true,false]"`
+
+	// Deprecated
+	APKPath string `env:"apk_path"`
 }
 
 func splitElements(list []string, sep string) (s []string) {
@@ -64,68 +69,6 @@ func parseAppList(list string) (apps []string) {
 		}
 	}
 	return
-}
-
-func createConfigsModelFromEnvs() ConfigsModel {
-	cfg := ConfigsModel{
-		BuildArtifactPath:  os.Getenv("android_app"),
-		KeystoreURL:        os.Getenv("keystore_url"),
-		KeystorePassword:   os.Getenv("keystore_password"),
-		KeystoreAlias:      os.Getenv("keystore_alias"),
-		PrivateKeyPassword: os.Getenv("private_key_password"),
-		JarsignerOptions:   os.Getenv("jarsigner_options"),
-		OutputName:         os.Getenv("output_name"),
-	}
-
-	if val := os.Getenv("apk_path"); val != "" {
-		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
-		cfg.BuildArtifactPath = val
-	}
-
-	return cfg
-}
-
-func (configs ConfigsModel) print() {
-	fmt.Println()
-	log.Infof("Configs:")
-	log.Printf(" - BuildArtifactPath: %s", configs.BuildArtifactPath)
-	log.Printf(" - KeystoreURL: %s", secureInput(configs.KeystoreURL))
-	log.Printf(" - KeystorePassword: %s", secureInput(configs.KeystorePassword))
-	log.Printf(" - KeystoreAlias: %s", configs.KeystoreAlias)
-	log.Printf(" - PrivateKeyPassword: %s", secureInput(configs.PrivateKeyPassword))
-	log.Printf(" - JarsignerOptions: %s", configs.JarsignerOptions)
-	log.Printf(" - OutputName: %s", configs.OutputName)
-	fmt.Println()
-}
-
-func (configs ConfigsModel) validate() error {
-	// required
-	if configs.BuildArtifactPath == "" {
-		return errors.New("no BuildArtifactPath parameter specified")
-	}
-
-	buildArtifactPaths := parseAppList(configs.BuildArtifactPath)
-	for _, buildArtifactPath := range buildArtifactPaths {
-		if exist, err := pathutil.IsPathExists(buildArtifactPath); err != nil {
-			return fmt.Errorf("failed to check if BuildArtifactPath exist at: %s, error: %s", buildArtifactPath, err)
-		} else if !exist {
-			return fmt.Errorf("BuildArtifactPath not exist at: %s", buildArtifactPath)
-		}
-	}
-
-	if configs.KeystoreURL == "" {
-		return errors.New("no KeystoreURL parameter specified")
-	}
-
-	if configs.KeystorePassword == "" {
-		return errors.New("no KeystorePassword parameter specified")
-	}
-
-	if configs.KeystoreAlias == "" {
-		return errors.New("no KeystoreAlias parameter specified")
-	}
-
-	return nil
 }
 
 // -----------------------
@@ -317,13 +260,40 @@ func failf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
+func handleDeprecatedInputs(cfg *configs) {
+	if cfg.APKPath != "" {
+		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
+		cfg.BuildArtifactPath = cfg.APKPath
+	}
+}
+
+func validate(cfg configs) error {
+	buildArtifactPaths := parseAppList(cfg.BuildArtifactPath)
+	for _, buildArtifactPath := range buildArtifactPaths {
+		if exist, err := pathutil.IsPathExists(buildArtifactPath); err != nil {
+			return fmt.Errorf("failed to check if BuildArtifactPath exist at: %s, error: %s", buildArtifactPath, err)
+		} else if !exist {
+			return fmt.Errorf("BuildArtifactPath not exist at: %s", buildArtifactPath)
+		}
+	}
+	return nil
+}
+
 // -----------------------
 // --- Main
 // -----------------------
 func main() {
-	configs := createConfigsModelFromEnvs()
-	configs.print()
-	if err := configs.validate(); err != nil {
+	var cfg configs
+	if err := stepconf.Parse(&cfg); err != nil {
+		failf("Issue with input: %s", err)
+	}
+
+	stepconf.Print(cfg)
+	log.SetEnableDebugLog(cfg.VerboseLog)
+	handleDeprecatedInputs(&cfg)
+	fmt.Println()
+
+	if err := validate(cfg); err != nil {
 		failf("Issue with input: %s", err)
 	}
 
@@ -334,8 +304,8 @@ func main() {
 	}
 
 	keystorePath := ""
-	if strings.HasPrefix(configs.KeystoreURL, "file://") {
-		pth := strings.TrimPrefix(configs.KeystoreURL, "file://")
+	if strings.HasPrefix(cfg.KeystoreURL, "file://") {
+		pth := strings.TrimPrefix(cfg.KeystoreURL, "file://")
 		var err error
 		keystorePath, err = pathutil.AbsPath(pth)
 		if err != nil {
@@ -344,13 +314,13 @@ func main() {
 	} else {
 		log.Infof("Download keystore")
 		keystorePath = path.Join(tmpDir, "keystore.jks")
-		if err := download(configs.KeystoreURL, keystorePath); err != nil {
+		if err := download(cfg.KeystoreURL, keystorePath); err != nil {
 			failf("Failed to download keystore, error: %s", err)
 		}
 	}
 	log.Printf("using keystore at: %s", keystorePath)
 
-	keystore, err := keystore.NewHelper(keystorePath, configs.KeystorePassword, configs.KeystoreAlias)
+	keystore, err := keystore.NewHelper(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias)
 	if err != nil {
 		failf("Failed to create keystore helper, error: %s", err)
 	}
@@ -379,17 +349,17 @@ func main() {
 	// ---
 
 	// Sign build artifacts
-	buildArtifactPaths := parseAppList(configs.BuildArtifactPath)
+	buildArtifactPaths := parseAppList(cfg.BuildArtifactPath)
 	signedAPKPaths := make([]string, 0)
 	signedAABPaths := make([]string, 0)
 
 	log.Infof("signing %d Build Artifacts", len(buildArtifactPaths))
 	fmt.Println()
 
-	if len(buildArtifactPaths) > 1 && configs.OutputName != "" {
+	if len(buildArtifactPaths) > 1 && cfg.OutputName != "" {
 		log.Warnf("output_name is set and more than one artifact found, disabling artifact renaming as it would result in overwriting exported artifacts")
 		fmt.Println()
-		configs.OutputName = ""
+		cfg.OutputName = ""
 	}
 
 	for i, buildArtifactPath := range buildArtifactPaths {
@@ -426,7 +396,7 @@ func main() {
 		// sign build artifact
 		unalignedBuildArtifactPth := filepath.Join(tmpDir, "unaligned"+artifactExt)
 		log.Infof("Sign Build Artifact")
-		if err := keystore.SignBuildArtifact(unsignedBuildArtifactPth, unalignedBuildArtifactPth, configs.PrivateKeyPassword); err != nil {
+		if err := keystore.SignBuildArtifact(unsignedBuildArtifactPth, unalignedBuildArtifactPth, cfg.PrivateKeyPassword); err != nil {
 			failf("Failed to sign Build Artifact, error: %s", err)
 		}
 		fmt.Println()
@@ -439,7 +409,7 @@ func main() {
 
 		log.Infof("Zipalign Build Artifact")
 		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
-		if artifactName := fmt.Sprintf("%s%s", configs.OutputName, artifactExt); configs.OutputName != "" {
+		if artifactName := fmt.Sprintf("%s%s", cfg.OutputName, artifactExt); cfg.OutputName != "" {
 			log.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
 			signedArtifactName = artifactName
 		}
@@ -461,23 +431,47 @@ func main() {
 	joinedAPKOutputPaths := strings.Join(signedAPKPaths, "|")
 	joinedAABOutputPaths := strings.Join(signedAABPaths, "|")
 
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", joinedAPKOutputPaths); err != nil {
-		log.Warnf("Failed to export Build Artifact, error: %s", err)
+	// APK
+	if len(signedAPKPaths) > 0 {
+		exportAPK(signedAPKPaths, joinedAPKOutputPaths)
+	} else {
+		log.Debugf("No Signed APK was exported - skip BITRISE_SIGNED_APK_PATH Environment Variable export")
+		log.Debugf("No Signed APK was exported - skip BITRISE_SIGNED_APK_PATH_LIST Environment Variable export")
 	}
-	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", joinedAPKOutputPaths)
 
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_APK_PATH", joinedAPKOutputPaths); err != nil {
-		log.Warnf("Failed to export Build Artifact, error: %s", err)
+	// AAB
+	if len(signedAABPaths) > 0 {
+		exportAAB(signedAABPaths, joinedAABOutputPaths)
+	} else {
+		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH Environment Variable export")
+		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH_LIST Environment Variable export")
 	}
-	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_APK_PATH (value: %s)", joinedAPKOutputPaths)
+}
 
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH", joinedAABOutputPaths); err != nil {
-		log.Warnf("Failed to export Build Artifact, error: %s", err)
+func exportAPK(signedAPKPaths []string, joinedAPKOutputPaths string) {
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedAPKPaths[len(signedAPKPaths)-1]); err != nil {
+		log.Warnf("Failed to export APK (%s) error: %s", signedAPKPaths[len(signedAPKPaths)-1], err)
+	} else {
+		log.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", signedAPKPaths[len(signedAPKPaths)-1])
 	}
-	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH (value: %s)", joinedAABOutputPaths)
 
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_AAB_PATH", joinedAABOutputPaths); err != nil {
-		log.Warnf("Failed to export Build Artifact, error: %s", err)
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH_LIST", joinedAPKOutputPaths); err != nil {
+		log.Warnf("Failed to export APK list (%s), error: %s", joinedAPKOutputPaths, err)
+	} else {
+		log.Donef("The Signed APK path list is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH_LIST (value: %s)", joinedAPKOutputPaths)
 	}
-	log.Donef("The Signed Build Artifact path is now available in the Environment Variable: BITRISE_AAB_PATH (value: %s)", joinedAABOutputPaths)
+}
+
+func exportAAB(signedAABPaths []string, joinedAABOutputPaths string) {
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH", signedAABPaths[len(signedAABPaths)-1]); err != nil {
+		log.Warnf("Failed to export AAB (%s), error: %s", signedAABPaths[len(signedAABPaths)-1], err)
+	} else {
+		log.Donef("The Signed AAB path is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH (value: %s)", signedAABPaths[len(signedAABPaths)-1])
+	}
+
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH_LIST", joinedAABOutputPaths); err != nil {
+		log.Warnf("Failed to export AAB list (%s), error: %s", joinedAABOutputPaths, err)
+	} else {
+		log.Donef("The Signed AAB path list is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH_LIST (value: %s)", joinedAABOutputPaths)
+	}
 }
