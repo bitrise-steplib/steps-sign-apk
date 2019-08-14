@@ -38,7 +38,7 @@ type configs struct {
 	JarsignerOptions   string `env:"jarsigner_options"`
 	OutputName         string `env:"output_name"`
 
-	VerboseLog bool `env:"verbose_log,opt[yes,no]"`
+	VerboseLog bool `env:"verbose_log,opt[true,false]"`
 
 	// Deprecated
 	APKPath string `env:"apk_path"`

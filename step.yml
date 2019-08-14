@@ -114,14 +114,14 @@ inputs:
       description: |
         If is empty then the output name is "app-release-bitrise-signed".
         Else it's the specified name. Do not add extensione here.
-  - verbose_log: "no"
+  - verbose_log: "false"
     opts:
       title: "Enable verbose logging?"
       description: Enable verbose logging?
       is_required: true
       value_options:
-      - "yes"
-      - "no"
+      - "true"
+      - "false"
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
