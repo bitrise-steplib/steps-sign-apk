@@ -460,6 +460,11 @@ func exportAPK(signedAPKPaths []string, joinedAPKOutputPaths string) {
 	} else {
 		log.Donef("The Signed APK path list is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH_LIST (value: %s)", joinedAPKOutputPaths)
 	}
+
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_APK_PATH", joinedAPKOutputPaths); err != nil {
+		log.Warnf("Failed to export APK list (%s), error: %s", joinedAPKOutputPaths, err)
+	}
+	log.Donef("he Signed APK path is now available in the Environment Variable: BITRISE_APK_PATH (value: %s)", joinedAPKOutputPaths)
 }
 
 func exportAAB(signedAABPaths []string, joinedAABOutputPaths string) {
@@ -474,4 +479,9 @@ func exportAAB(signedAABPaths []string, joinedAABOutputPaths string) {
 	} else {
 		log.Donef("The Signed AAB path list is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH_LIST (value: %s)", joinedAABOutputPaths)
 	}
+
+	if err := tools.ExportEnvironmentWithEnvman("BITRISE_AAB_PATH", joinedAABOutputPaths); err != nil {
+		log.Warnf("Failed to export AAB list (%s), error: %s", joinedAABOutputPaths, err)
+	}
+	log.Donef("he Signed AAB path is now available in the Environment Variable: BITRISE_AAB_PATH (value: %s)", joinedAABOutputPaths)
 }
