@@ -27,8 +27,18 @@ workflows:
     - errcheck:
     - go-test:
     after_run:
+    - test_new_build_tools
     - test_apk
     - test_bundle
+
+  test_new_build_tools:
+    envs:
+    - GRADLE_TASK: assembleRelease
+    - APK_FILE_INCLUDE_FILTER: "*.apk"
+    - BRANCH: newbuildtool
+    after_run:
+    - create_build_artifact
+    - test
 
   test_apk:
     envs:
