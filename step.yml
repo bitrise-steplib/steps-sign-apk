@@ -19,14 +19,14 @@ description: |-
 
 
   ### Useful links
-  [Android code signing using Android Sign Step](https://devcenter.bitrise.io/code-signing/android-code-signing/android-code-signing-using-bitrise-sign-apk-step/)
-  [Android deployment](https://devcenter.bitrise.io/deploy/android-deploy/android-deployment-index/)
+  - [Android code signing using Android Sign Step](https://devcenter.bitrise.io/code-signing/android-code-signing/android-code-signing-using-bitrise-sign-apk-step/)
+  - [Android deployment](https://devcenter.bitrise.io/deploy/android-deploy/android-deployment-index/)
 
 
   ### Related Steps
-  [Android Build](https://www.bitrise.io/integrations/steps/android-build)
-  [Gradle Runner](https://www.bitrise.io/integrations/steps/gradle-runner)
-  [Deploy to Bitrise.io](https://www.bitrise.io/integrations/steps/deploy-to-bitrise-io)
+  - [Android Build](https://www.bitrise.io/integrations/steps/android-build)
+  - [Gradle Runner](https://www.bitrise.io/integrations/steps/gradle-runner)
+  - [Deploy to Bitrise.io](https://www.bitrise.io/integrations/steps/deploy-to-bitrise-io)
 website: https://github.com/bitrise-steplib/steps-sign-apk
 source_code_url: https://github.com/bitrise-steplib/steps-sign-apk
 support_url: https://github.com/bitrise-steplib/steps-sign-apk/issues
