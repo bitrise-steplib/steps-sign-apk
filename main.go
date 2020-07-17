@@ -39,6 +39,7 @@ type configs struct {
 	OutputName         string `env:"output_name"`
 
 	VerboseLog bool `env:"verbose_log,opt[true,false]"`
+	PageAlign  bool `env:"page_align,opt[true,false]"`
 
 	// Deprecated
 	APKPath string `env:"apk_path"`

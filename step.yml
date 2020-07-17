@@ -130,6 +130,17 @@ inputs:
       summary: ""
       description: |
         __deprecated!__ jarsigner options are detected from the keystore
+  - page_align: "false"
+    opts:
+      title: "Page alignment"
+      summary: ""
+      is_sensitive: false
+      is_required: false
+      value_options:
+      - "true"
+      - "false"
+      description: |
+        If enabled, teels zipalign to use memory page alignment for stored shared object files
   - output_name: ""
     opts:
       title: "Artifact name"
