@@ -39,6 +39,7 @@ type configs struct {
 	OutputName         string `env:"output_name"`
 
 	VerboseLog bool `env:"verbose_log,opt[true,false]"`
+	PageAlign  bool `env:"page_align,opt[true,false]"`
 
 	// Deprecated
 	APKPath string `env:"apk_path"`
@@ -237,9 +238,14 @@ func unsignBuildArtifact(aapt, pth string) error {
 	return removeFilesFromBuildArtifact(aapt, pth, signingFiles)
 }
 
-func zipalignBuildArtifact(zipalign, pth, dstPth string) error {
-	cmdSlice := []string{zipalign, "-f", "4", pth, dstPth}
+func zipalignBuildArtifact(zipalign, pth, dstPth string, pageAlign bool) error {
+	cmdSlice := []string{zipalign}
 
+	if pageAlign {
+		cmdSlice = append(cmdSlice, "-p")
+	}
+
+	cmdSlice = append(cmdSlice, "-f", "4", pth, dstPth)
 	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
 	log.Printf("=> %s", prinatableCmd)
 
@@ -421,7 +427,7 @@ func main() {
 			signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
 
-		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath); err != nil {
+		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath, cfg.PageAlign); err != nil {
 			failf("Failed to zipalign Build Artifact, error: %s", err)
 		}
 		fmt.Println()
