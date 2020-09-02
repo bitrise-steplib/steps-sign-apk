@@ -140,7 +140,7 @@ inputs:
       - "true"
       - "false"
       description: |
-        If enabled, teels zipalign to use memory page alignment for stored shared object files
+        If enabled, it tells zipalign to use memory page alignment for stored shared object files
   - output_name: ""
     opts:
       title: "Artifact name"
