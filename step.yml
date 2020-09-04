@@ -124,18 +124,12 @@ inputs:
         If key password equals to keystore password, you can leave it empty.
         Otherwise specify the private key password.
       is_sensitive: true
-  - jarsigner_options: ""
-    opts:
-      title: "Additional options for jarsigner"
-      summary: ""
-      description: |
-        __deprecated!__ jarsigner options are detected from the keystore
   - page_align: "false"
     opts:
       title: "Page alignment"
       summary: ""
       is_sensitive: false
-      is_required: false
+      is_required: true
       value_options:
       - "true"
       - "false"
