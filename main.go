@@ -75,6 +75,9 @@ func parseAppList(list string) (apps []string) {
 
 func download(url, pth string) error {
 	out, err := os.Create(pth)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		if err := out.Close(); err != nil {
 			log.Warnf("Failed to close file: %s, error: %s", out, err)
