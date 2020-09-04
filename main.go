@@ -9,7 +9,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
@@ -20,8 +19,6 @@ import (
 	"github.com/bitrise-tools/go-android/sdk"
 	"github.com/bitrise-tools/go-steputils/tools"
 )
-
-const jarsigner = "/usr/bin/jarsigner"
 
 var signingFileExts = []string{".mf", ".rsa", ".dsa", ".ec", ".sf"}
 
@@ -76,53 +73,6 @@ func parseAppList(list string) (apps []string) {
 // --- Functions
 // -----------------------
 
-func secureInput(str string) string {
-	if str == "" {
-		return ""
-	}
-
-	secureStr := func(s string, show int) string {
-		runeCount := utf8.RuneCountInString(s)
-		if runeCount < 6 || show == 0 {
-			return strings.Repeat("*", 3)
-		}
-		if show*4 > runeCount {
-			show = 1
-		}
-
-		sec := fmt.Sprintf("%s%s%s", s[0:show], strings.Repeat("*", 3), s[len(s)-show:len(s)])
-		return sec
-	}
-
-	prefix := ""
-	cont := str
-	sec := secureStr(cont, 0)
-
-	if strings.HasPrefix(str, "file://") {
-		prefix = "file://"
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	} else if strings.HasPrefix(str, "http://www.") {
-		prefix = "http://www."
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	} else if strings.HasPrefix(str, "https://www.") {
-		prefix = "https://www."
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	} else if strings.HasPrefix(str, "http://") {
-		prefix = "http://"
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	} else if strings.HasPrefix(str, "https://") {
-		prefix = "https://"
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	}
-
-	return prefix + sec
-}
-
 func download(url, pth string) error {
 	out, err := os.Create(pth)
 	defer func() {
@@ -143,19 +93,6 @@ func download(url, pth string) error {
 
 	_, err = io.Copy(out, resp.Body)
 	return err
-}
-
-func fileList(searchDir string) ([]string, error) {
-	fileList := []string{}
-
-	if err := filepath.Walk(searchDir, func(path string, f os.FileInfo, err error) error {
-		fileList = append(fileList, path)
-		return err
-	}); err != nil {
-		return []string{}, err
-	}
-
-	return fileList, nil
 }
 
 func listFilesInBuildArtifact(aapt, pth string) ([]string, error) {
