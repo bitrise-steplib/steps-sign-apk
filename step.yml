@@ -135,7 +135,7 @@ inputs:
       title: "Page alignment"
       summary: ""
       is_sensitive: false
-      is_required: false
+      is_required: true
       value_options:
       - "true"
       - "false"
