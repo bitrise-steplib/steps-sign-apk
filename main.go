@@ -123,7 +123,7 @@ func filterSigningFiles(fileList []string) []string {
 	for _, file := range fileList {
 		ext := filepath.Ext(file)
 		for _, signExt := range signingFileExts {
-			if strings.ToLower(ext) == strings.ToLower(signExt) {
+			if strings.EqualFold(ext, signExt) {
 				signingFiles = append(signingFiles, file)
 			}
 		}
