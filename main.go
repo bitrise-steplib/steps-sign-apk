@@ -32,7 +32,6 @@ type configs struct {
 	KeystorePassword   string `env:"keystore_password,required"`
 	KeystoreAlias      string `env:"keystore_alias,required"`
 	PrivateKeyPassword string `env:"private_key_password"`
-	JarsignerOptions   string `env:"jarsigner_options"`
 	OutputName         string `env:"output_name"`
 
 	VerboseLog bool `env:"verbose_log,opt[true,false]"`
