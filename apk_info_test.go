@@ -43,10 +43,6 @@ func Test_parseAPKextractNativeLibs(t *testing.T) {
 			want:    false,
 			wantErr: false,
 		},
-		{
-			apkPath: "/Users/lpusok/Develop/samples/android-multiple-test-results-sample-master/app/build/outputs/apk/debug/app-debug.apk",
-			want:    true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
