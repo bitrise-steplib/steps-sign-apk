@@ -383,17 +383,19 @@ func main() {
 		}
 		fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
-		if artifactExt == ".aab" {
+		if strings.EqualFold(artifactExt, ".aab") {
 			signedAABPaths = append(signedAABPaths, fullPath)
 		} else {
 			signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
 
 		pageAlign := pageAlignConfig == pageAlignYes
-		if artifactExt != ".aab" && pageAlignConfig == pageAlignAuto {
+		// Only care about .so memory page alignment for APKs
+		if !strings.EqualFold(artifactExt, ".aab") && pageAlignConfig == pageAlignAuto {
 			extractNativeLibs, err := parseAPKextractNativeLibs(fullPath)
 			if err != nil {
-				log.Warnf("Failed to parse APK manifest (extractNativeLibs attribute): %s", err)
+				log.Warnf("Failed to parse APK manifest to read extractNativeLibs attribute: %s", err)
+				pageAlign = true
 			} else {
 				pageAlign = !extractNativeLibs
 			}
