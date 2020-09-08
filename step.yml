@@ -124,7 +124,7 @@ inputs:
         If key password equals to keystore password, you can leave it empty.
         Otherwise specify the private key password.
       is_sensitive: true
-  - page_align: "false"
+  - page_align: "automatic"
     opts:
       title: "Page alignment"
       summary: ""
@@ -133,8 +133,13 @@ inputs:
       value_options:
       - "true"
       - "false"
+      - "automatic"
       description: |
-        If enabled, it tells zipalign to use memory page alignment for stored shared object files
+        If enabled, it tells zipalign to use memory page alignment for stored shared object files.
+
+        - `automatic`: Enable page alignment for .so files, unless atribute `extractNativeLibs="true"` is set in the AndroidManifest.xml
+        - `true`: Enable memory page alignment for .so files
+        - `false`: Disable memory page alignment for .so files
   - output_name: ""
     opts:
       title: "Artifact name"
