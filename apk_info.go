@@ -25,18 +25,18 @@ func parseAPKextractNativeLibs(apkPath string) (bool, error) {
 
 	zipErr, resErr, manErr := apkparser.ParseApk(apkPath, enc)
 	if zipErr != nil {
-		return false, fmt.Errorf("failed to unzip the APK, error: %s", zipErr)
+		return false, fmt.Errorf("failed to unzip the APK: %s", zipErr)
 	}
 	if resErr != nil {
-		return false, fmt.Errorf("failed to parse resources, error: %s", zipErr)
+		return false, fmt.Errorf("failed to parse resources: %s", zipErr)
 	}
 	if manErr != nil {
-		return false, fmt.Errorf("failed to parse AndroidManifest.xml, error: %s", zipErr)
+		return false, fmt.Errorf("failed to parse AndroidManifest.xml: %s", zipErr)
 	}
 
 	var manifest manifest
 	if err := xml.Unmarshal(manifestContent.Bytes(), &manifest); err != nil {
-		return false, fmt.Errorf("failed to unmarshal AndroidManifest.xml, error: %s", err)
+		return false, fmt.Errorf("failed to unmarshal AndroidManifest.xml: %s", err)
 	}
 
 	return manifest.Application.ExtractNativeLibs, nil
