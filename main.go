@@ -34,11 +34,33 @@ type configs struct {
 	PrivateKeyPassword string `env:"private_key_password"`
 	OutputName         string `env:"output_name"`
 
-	VerboseLog bool `env:"verbose_log,opt[true,false]"`
-	PageAlign  bool `env:"page_align,opt[true,false]"`
+	VerboseLog bool   `env:"verbose_log,opt[true,false]"`
+	PageAlign  string `env:"page_align,opt[automatic,true,false]"`
 
 	// Deprecated
 	APKPath string `env:"apk_path"`
+}
+
+type pageAlignStatus int
+
+const (
+	pageAlignInvalid pageAlignStatus = iota + 1
+	pageAlignAuto
+	pageAlignYes
+	pageAlignNo
+)
+
+func parsePageAlign(s string) pageAlignStatus {
+	switch s {
+	case "automatic":
+		return pageAlignAuto
+	case "true":
+		return pageAlignYes
+	case "false":
+		return pageAlignNo
+	default:
+		return pageAlignInvalid
+	}
 }
 
 func splitElements(list []string, sep string) (s []string) {
@@ -232,6 +254,7 @@ func main() {
 	if err := stepconf.Parse(&cfg); err != nil {
 		failf("Issue with input: %s", err)
 	}
+	pageAlignConfig := parsePageAlign(cfg.PageAlign)
 
 	stepconf.Print(cfg)
 	log.SetEnableDebugLog(cfg.VerboseLog)
@@ -360,13 +383,25 @@ func main() {
 		}
 		fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
-		if artifactExt == ".aab" {
+		if strings.EqualFold(artifactExt, ".aab") {
 			signedAABPaths = append(signedAABPaths, fullPath)
 		} else {
 			signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
 
-		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath, cfg.PageAlign); err != nil {
+		pageAlign := pageAlignConfig == pageAlignYes
+		// Only care about .so memory page alignment for APKs
+		if !strings.EqualFold(artifactExt, ".aab") && pageAlignConfig == pageAlignAuto {
+			extractNativeLibs, err := parseAPKextractNativeLibs(fullPath)
+			if err != nil {
+				log.Warnf("Failed to parse APK manifest to read extractNativeLibs attribute: %s", err)
+				pageAlign = true
+			} else {
+				pageAlign = !extractNativeLibs
+			}
+		}
+
+		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath, pageAlign); err != nil {
 			failf("Failed to zipalign Build Artifact, error: %s", err)
 		}
 		fmt.Println()
