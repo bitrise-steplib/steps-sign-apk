@@ -270,9 +270,9 @@ func main() {
 
 	// Download keystore
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
-	// if err != nil {
-	// 	failf("Failed to create tmp dir, error: %s", err)
-	// }
+	if err != nil {
+		failf("Failed to create tmp dir, error: %s", err)
+	}
 
 	keystorePath := ""
 	if strings.HasPrefix(cfg.KeystoreURL, "file://") {
