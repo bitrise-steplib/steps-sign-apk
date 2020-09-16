@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"./apksigner"
+	"github.com/FutureWorkshops/steps-sign-apk/apksigner"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
@@ -40,6 +40,7 @@ type configs struct {
 	PageAlign           string `env:"page_align,opt[automatic,true,false]"`
 	SignerScheme        string `env:"signer_scheme,opt[automatic,v2,v3,v4]"`
 	DebuggablePermitted string `env:"debuggable_permitted,opt[true,false]"`
+	UseAPKSigner        bool   `env:"use_apk_signer,opt[true,false]"`
 
 	// Deprecated
 	APKPath string `env:"apk_path"`
@@ -270,10 +271,10 @@ func main() {
 	}
 
 	// Download keystore
-	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
-	if err != nil {
-		failf("Failed to create tmp dir, error: %s", err)
-	}
+	tmpDir := "/Users/igor/Documents/git/FW/Bitrise/steps-sign-apk/test" //, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
+	// if err != nil {
+	// 	failf("Failed to create tmp dir, error: %s", err)
+	// }
 
 	keystorePath := ""
 	if strings.HasPrefix(cfg.KeystoreURL, "file://") {
@@ -370,11 +371,14 @@ func main() {
 		}
 
 		if strings.EqualFold(artifactExt, ".aab") {
-			fullPath := signAAB(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
+			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
 			signedAABPaths = append(signedAABPaths, fullPath)
-		} else {
+		} else if cfg.UseAPKSigner {
 			fullPath := signAPK(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.OutputName, apkSigner, pageAlignConfig)
 			signedAPKPaths = append(signedAPKPaths, fullPath)
+		} else {
+			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
+			signedAABPaths = append(signedAABPaths, fullPath)
 		}
 
 		if err != nil {
@@ -404,7 +408,7 @@ func main() {
 	}
 }
 
-func signAAB(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, privateKeyPassword string, outputName string, keystore keystore.Helper, pageAlignConfig pageAlignStatus) string {
+func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, privateKeyPassword string, outputName string, keystore keystore.Helper, pageAlignConfig pageAlignStatus) string {
 	// sign build artifact
 	unalignedBuildArtifactPth := filepath.Join(tmpDir, "unaligned"+artifactExt)
 	log.Infof("Sign Build Artifact with Jarsigner: %s", unsignedBuildArtifactPth)

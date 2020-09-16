@@ -185,6 +185,15 @@ inputs:
       value_options:
       - "true"
       - "false"
+  - use_apk_signer: "false"
+    opts:
+      title: "Enables APK Signer"
+      description: "Indicates if the signature should be done using APK Signer instead of JAR Signer"
+      is_required: true
+      is_sensitive: false
+      value_options:
+      - "true"
+      - "false"
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
