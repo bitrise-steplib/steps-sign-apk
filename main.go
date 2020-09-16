@@ -271,7 +271,7 @@ func main() {
 	}
 
 	// Download keystore
-	tmpDir := "/Users/igor/Documents/git/FW/Bitrise/steps-sign-apk/test" //, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
+	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
 	// if err != nil {
 	// 	failf("Failed to create tmp dir, error: %s", err)
 	// }
