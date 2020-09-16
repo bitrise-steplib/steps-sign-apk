@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"./apksigner"
-
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
@@ -320,7 +318,7 @@ func main() {
 	}
 	log.Printf("zipalign: %s", zipalign)
 
-	apkSigner, err := apksigner.NewKeystoreSignatureConfiguration(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias, cfg.PrivateKeyPassword, cfg.DebuggablePermitted, cfg.SignerScheme)
+	apkSigner, err := NewKeystoreSignatureConfiguration(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias, cfg.PrivateKeyPassword, cfg.DebuggablePermitted, cfg.SignerScheme)
 	if err != nil {
 		failf("Failed to create keystore helper, error: %s", err)
 	}
@@ -432,7 +430,7 @@ func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, bui
 	return fullPath
 }
 
-func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, outputName string, apkSigner apksigner.SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
+func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, outputName string, apkSigner SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
 	log.Infof("Sign Build Artifact with APKSigner: %s", unsignedBuildArtifactPth)
 
 	alignedPath, err := zipAlignArtifact(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "aligned", "", pageAlignConfig)
