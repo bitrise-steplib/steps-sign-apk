@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/FutureWorkshops/steps-sign-apk/apksigner"
+
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
@@ -34,8 +36,11 @@ type configs struct {
 	PrivateKeyPassword string `env:"private_key_password"`
 	OutputName         string `env:"output_name"`
 
-	VerboseLog bool   `env:"verbose_log,opt[true,false]"`
-	PageAlign  string `env:"page_align,opt[automatic,true,false]"`
+	VerboseLog          bool   `env:"verbose_log,opt[true,false]"`
+	PageAlign           string `env:"page_align,opt[automatic,true,false]"`
+	SignerScheme        string `env:"signer_scheme,opt[automatic,v2,v3,v4]"`
+	DebuggablePermitted string `env:"debuggable_permitted,opt[true,false]"`
+	UseAPKSigner        bool   `env:"use_apk_signer,opt[true,false]"`
 
 	// Deprecated
 	APKPath string `env:"apk_path"`
@@ -266,10 +271,10 @@ func main() {
 	}
 
 	// Download keystore
-	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
-	if err != nil {
-		failf("Failed to create tmp dir, error: %s", err)
-	}
+	tmpDir := "/Users/igor/Documents/git/FW/Bitrise/steps-sign-apk/test" //, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
+	// if err != nil {
+	// 	failf("Failed to create tmp dir, error: %s", err)
+	// }
 
 	keystorePath := ""
 	if strings.HasPrefix(cfg.KeystoreURL, "file://") {
@@ -314,6 +319,11 @@ func main() {
 		failf("Failed to find zipalign path, error: %s", err)
 	}
 	log.Printf("zipalign: %s", zipalign)
+
+	apkSigner, err := apksigner.NewKeystoreSignatureConfiguration(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias, cfg.PrivateKeyPassword, cfg.DebuggablePermitted, cfg.SignerScheme)
+	if err != nil {
+		failf("Failed to create keystore helper, error: %s", err)
+	}
 	// ---
 
 	// Sign build artifacts
@@ -359,50 +369,20 @@ func main() {
 			log.Printf("No signature file (DSA or RSA) found in META-INF, skipping build artifact unsign...")
 			fmt.Println()
 		}
-		// ---
-
-		// sign build artifact
-		unalignedBuildArtifactPth := filepath.Join(tmpDir, "unaligned"+artifactExt)
-		log.Infof("Sign Build Artifact")
-		if err := keystore.SignBuildArtifact(unsignedBuildArtifactPth, unalignedBuildArtifactPth, cfg.PrivateKeyPassword); err != nil {
-			failf("Failed to sign Build Artifact, error: %s", err)
-		}
-		fmt.Println()
-
-		log.Infof("Verify Build Artifact")
-		if err := keystore.VerifyBuildArtifact(unalignedBuildArtifactPth); err != nil {
-			failf("Failed to verify Build Artifact, error: %s", err)
-		}
-		fmt.Println()
-
-		log.Infof("Zipalign Build Artifact")
-		signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
-		if artifactName := fmt.Sprintf("%s%s", cfg.OutputName, artifactExt); cfg.OutputName != "" {
-			log.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
-			signedArtifactName = artifactName
-		}
-		fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
 		if strings.EqualFold(artifactExt, ".aab") {
+			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
 			signedAABPaths = append(signedAABPaths, fullPath)
-		} else {
+		} else if cfg.UseAPKSigner {
+			fullPath := signAPK(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.OutputName, apkSigner, pageAlignConfig)
 			signedAPKPaths = append(signedAPKPaths, fullPath)
+		} else {
+			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
+			signedAABPaths = append(signedAABPaths, fullPath)
 		}
 
-		pageAlign := pageAlignConfig == pageAlignYes
-		// Only care about .so memory page alignment for APKs
-		if !strings.EqualFold(artifactExt, ".aab") && pageAlignConfig == pageAlignAuto {
-			extractNativeLibs, err := parseAPKextractNativeLibs(fullPath)
-			if err != nil {
-				log.Warnf("Failed to parse APK manifest to read extractNativeLibs attribute: %s", err)
-				pageAlign = true
-			} else {
-				pageAlign = !extractNativeLibs
-			}
-		}
-
-		if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath, pageAlign); err != nil {
-			failf("Failed to zipalign Build Artifact, error: %s", err)
+		if err != nil {
+			failf("Failed to sign artifact, error: %s", err)
 		}
 		fmt.Println()
 		// ---
@@ -426,6 +406,112 @@ func main() {
 		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH Environment Variable export")
 		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH_LIST Environment Variable export")
 	}
+}
+
+func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, privateKeyPassword string, outputName string, keystore keystore.Helper, pageAlignConfig pageAlignStatus) string {
+	// sign build artifact
+	unalignedBuildArtifactPth := filepath.Join(tmpDir, "unaligned"+artifactExt)
+	log.Infof("Sign Build Artifact with Jarsigner: %s", unsignedBuildArtifactPth)
+	if err := keystore.SignBuildArtifact(unsignedBuildArtifactPth, unalignedBuildArtifactPth, privateKeyPassword); err != nil {
+		failf("Failed to sign Build Artifact, error: %s", err)
+	}
+	fmt.Println()
+
+	log.Infof("Verify Build Artifact")
+	if err := keystore.VerifyBuildArtifact(unalignedBuildArtifactPth); err != nil {
+		failf("Failed to verify Build Artifact, error: %s", err)
+	}
+	fmt.Println()
+
+	fullPath, err := zipAlignArtifact(zipalign, unalignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "signed", outputName, pageAlignConfig)
+
+	if err != nil {
+		failf("Failed to zip align artifact, error: %s", err)
+	}
+
+	return fullPath
+}
+
+func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, outputName string, apkSigner apksigner.SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
+	log.Infof("Sign Build Artifact with APKSigner: %s", unsignedBuildArtifactPth)
+
+	alignedPath, err := zipAlignArtifact(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "aligned", "", pageAlignConfig)
+
+	if err != nil {
+		failf("Failed to zip align artifact, error: %s", err)
+	}
+
+	fullPath := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
+	if artifactName := fmt.Sprintf("%s%s", outputName, artifactExt); outputName != "" {
+		log.Printf("- Exporting (%s) as: %s", fullPath, artifactName)
+		fullPath = artifactName
+	}
+
+	log.Infof("Signing build: %s", alignedPath)
+
+	err = apkSigner.SignBuidlArtifact(alignedPath, fullPath)
+	if err != nil {
+		failf("Failed to build artifact, error: %s", err)
+	}
+
+	log.Infof("Verify Build Artifact")
+	err = apkSigner.VerifyBuildArtifact(fullPath)
+	if err != nil {
+		failf("Failed to build artifact, error: %s", err)
+	}
+
+	return fullPath
+}
+
+func prepareBuildArtifact(buildArtifactPath string, unsignedBuildArtifactPth string, aapt string) {
+	if err := command.CopyFile(buildArtifactPath, unsignedBuildArtifactPth); err != nil {
+		failf("Failed to copy build artifact, error: %s", err)
+	}
+
+	isSigned, err := isBuildArtifactSigned(aapt, unsignedBuildArtifactPth)
+	if err != nil {
+		failf("Failed to check if build artifact is signed, error: %s", err)
+	}
+
+	if isSigned {
+		log.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the build artifact...")
+		if err := unsignBuildArtifact(aapt, unsignedBuildArtifactPth); err != nil {
+			failf("Failed to unsign Build Artifact, error: %s", err)
+		}
+		fmt.Println()
+	} else {
+		log.Printf("No signature file (DSA or RSA) found in META-INF, skipping build artifact unsign...")
+		fmt.Println()
+	}
+	// ---
+}
+
+func zipAlignArtifact(zipalign, unalignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, fullPathExt string, outputName string, pageAlignConfig pageAlignStatus) (string, error) {
+	log.Infof("Zipalign Build Artifact")
+	signedArtifactName := fmt.Sprintf("%s-bitrise-%s%s", buildArtifactBasename, fullPathExt, artifactExt)
+	if artifactName := fmt.Sprintf("%s%s", outputName, artifactExt); outputName != "" {
+		log.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
+		signedArtifactName = artifactName
+	}
+	fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
+
+	pageAlign := pageAlignConfig == pageAlignYes
+	// Only care about .so memory page alignment for APKs
+	if !strings.EqualFold(artifactExt, ".aab") && pageAlignConfig == pageAlignAuto {
+		extractNativeLibs, err := parseAPKextractNativeLibs(fullPath)
+		if err != nil {
+			log.Warnf("Failed to parse APK manifest to read extractNativeLibs attribute: %s", err)
+			pageAlign = true
+		} else {
+			pageAlign = !extractNativeLibs
+		}
+	}
+
+	if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath, pageAlign); err != nil {
+		failf("Failed to zipalign Build Artifact, error: %s", err)
+	}
+
+	return fullPath, nil
 }
 
 func exportAPK(signedAPKPaths []string, joinedAPKOutputPaths string) {
