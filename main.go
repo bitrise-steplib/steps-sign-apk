@@ -441,11 +441,12 @@ func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArti
 		failf("Failed to zip align artifact, error: %s", err)
 	}
 
-	fullPath := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
+	signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
 	if artifactName := fmt.Sprintf("%s%s", outputName, artifactExt); outputName != "" {
-		log.Printf("- Exporting (%s) as: %s", fullPath, artifactName)
-		fullPath = artifactName
+		log.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
+		signedArtifactName = artifactName
 	}
+	fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
 	log.Infof("Signing build: %s", alignedPath)
 
