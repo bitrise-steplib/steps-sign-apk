@@ -289,7 +289,7 @@ func main() {
 	}
 	log.Printf("using keystore at: %s", keystorePath)
 
-	keystore, err := keystore.NewHelper(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias)
+	keystore, err := keystore.NewHelper(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias, cfg.SignerScheme)
 	if err != nil {
 		failf("Failed to create keystore helper, error: %s", err)
 	}

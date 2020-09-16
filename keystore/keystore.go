@@ -24,6 +24,7 @@ type Helper struct {
 	keystorePassword   string
 	alias              string
 	signatureAlgorithm string
+	signerScheme       string
 }
 
 // Execute ...
@@ -61,7 +62,7 @@ func ExecuteForOutput(cmdSlice []string) (string, error) {
 }
 
 // NewHelper ...
-func NewHelper(keystorePth, keystorePassword, alias string) (Helper, error) {
+func NewHelper(keystorePth, keystorePassword, alias string, signerScheme string) (Helper, error) {
 	if exist, err := pathutil.IsPathExists(keystorePth); err != nil {
 		return Helper{}, err
 	} else if !exist {
@@ -106,7 +107,23 @@ func NewHelper(keystorePth, keystorePassword, alias string) (Helper, error) {
 		keystorePassword:   keystorePassword,
 		alias:              alias,
 		signatureAlgorithm: signatureAlgorithm,
+		signerScheme:       signerScheme,
 	}, nil
+}
+
+func createSignerSchemeCmd(signerScheme string) string {
+	switch signerScheme {
+	case "automatic":
+		return ""
+	case "v2":
+		return "--v2-signing-enabled true"
+	case "v3":
+		return "--v3-signing-enabled true"
+	case "v4":
+		return "--v4-signing-enabled true"
+	default:
+		return ""
+	}
 }
 
 func (helper Helper) createSignCmd(buildArtifactPth, destBuildArtifactPth, privateKeyPassword string) ([]string, error) {
@@ -118,6 +135,7 @@ func (helper Helper) createSignCmd(buildArtifactPth, destBuildArtifactPth, priva
 
 	signingAlgorithm := "SHA1with" + split[0]
 	digestAlgorithm := "SHA1"
+	schema := createSignerSchemeCmd(helper.signerScheme)
 
 	cmdSlice := []string{
 		jarsigner,
@@ -133,6 +151,8 @@ func (helper Helper) createSignCmd(buildArtifactPth, destBuildArtifactPth, priva
 		helper.keystorePth,
 		"-storepass",
 		helper.keystorePassword,
+
+		schema,
 	}
 
 	if privateKeyPassword != "" {
