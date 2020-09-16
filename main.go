@@ -34,9 +34,10 @@ type configs struct {
 	PrivateKeyPassword string `env:"private_key_password"`
 	OutputName         string `env:"output_name"`
 
-	VerboseLog   bool   `env:"verbose_log,opt[true,false]"`
-	PageAlign    string `env:"page_align,opt[automatic,true,false]"`
-	SignerScheme string `env:"signer_scheme,opt[automatic,v2,v3,v4]"`
+	VerboseLog          bool   `env:"verbose_log,opt[true,false]"`
+	PageAlign           string `env:"page_align,opt[automatic,true,false]"`
+	SignerScheme        string `env:"signer_scheme,opt[automatic,v2,v3,v4]"`
+	DebuggablePermitted string `env:"debuggable_permitted,opt[true,false]"`
 
 	// Deprecated
 	APKPath string `env:"apk_path"`
