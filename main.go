@@ -376,7 +376,7 @@ func main() {
 			signedAPKPaths = append(signedAPKPaths, fullPath)
 		} else {
 			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
-			signedAABPaths = append(signedAABPaths, fullPath)
+			signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
 
 		if err != nil {
