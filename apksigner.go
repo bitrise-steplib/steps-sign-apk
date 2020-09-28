@@ -26,43 +26,7 @@ func createSignerSchemeCmd(signerScheme string) string {
 	}
 }
 
-func createPCKSCmdSlice(configuration *PKCSSignatureConfiguration) ([]string, error) {
-
-	if configuration == nil {
-		return []string{}, errors.New("Invalid PKCS Configuration")
-	}
-
-	cmdSlice := []string{
-		"--provider-class",
-		"sun.security.pkcs11.SunPKCS11",
-		"--ks-type",
-		"PKCS11",
-		"--ks",
-		"NONE",
-		"--provider-arg",
-		configuration.providerArgument,
-	}
-
-	return cmdSlice, nil
-}
-
-func createCertificateCmdSlice(configuration *CertificateSignatureConfiguration) ([]string, error) {
-
-	if configuration == nil {
-		return []string{}, errors.New("Invalid Certificate Configuration")
-	}
-
-	cmdSlice := []string{
-		"--key",
-		configuration.keyPath,
-		"--cert",
-		configuration.certificatePath,
-	}
-	return cmdSlice, nil
-}
-
 func createKeystoreCmdSlice(configuration *KeystoreSignatureConfiguration) ([]string, error) {
-
 	if configuration == nil {
 		return []string{}, errors.New("Invalid Keystore Configuration")
 	}
@@ -84,19 +48,14 @@ func createKeystoreCmdSlice(configuration *KeystoreSignatureConfiguration) ([]st
 }
 
 func (configuration SignatureConfiguration) createSignCmd(buildArtifactPth string, destBuildArtifactPth string) ([]string, error) {
-
 	var signatureSlice []string = []string{}
 	var err error = nil
 
 	switch configuration.signatureType {
 	case KeystoreSignatureType:
 		signatureSlice, err = createKeystoreCmdSlice(configuration.keystoreConfiguration)
-	case CertificateSignatureType:
-		signatureSlice, err = createCertificateCmdSlice(configuration.certiciateConfiguration)
-	case PKCSSignatureType:
-		signatureSlice, err = createPCKSCmdSlice(configuration.pcksConfiguartion)
 	default:
-		err = fmt.Errorf("Invalid signature type: %s", configuration.signatureType)
+		err = fmt.Errorf("invalid signature type: %s", configuration.signatureType)
 	}
 
 	if err != nil {
