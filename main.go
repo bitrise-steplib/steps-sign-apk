@@ -474,7 +474,7 @@ func zipAlignArtifact(zipalign, unalignedBuildArtifactPth string, buildArtifactD
 	pageAlign := pageAlignConfig == pageAlignYes
 	// Only care about .so memory page alignment for APKs
 	if !strings.EqualFold(artifactExt, ".aab") && pageAlignConfig == pageAlignAuto {
-		extractNativeLibs, err := parseAPKextractNativeLibs(fullPath)
+		extractNativeLibs, err := parseAPKextractNativeLibs(unalignedBuildArtifactPth)
 		if err != nil {
 			log.Warnf("Failed to parse APK manifest to read extractNativeLibs attribute: %s", err)
 			pageAlign = true
