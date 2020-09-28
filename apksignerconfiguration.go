@@ -12,21 +12,8 @@ type SignatureType string
 
 // SignatureType values
 const (
-	KeystoreSignatureType    SignatureType = "keystore"
-	PKCSSignatureType                      = "pcks"
-	CertificateSignatureType               = "certificate"
+	KeystoreSignatureType SignatureType = "keystore"
 )
-
-// CertificateSignatureConfiguration ...
-type CertificateSignatureConfiguration struct {
-	keyPath         string
-	certificatePath string
-}
-
-// PKCSSignatureConfiguration ...
-type PKCSSignatureConfiguration struct {
-	providerArgument string
-}
 
 // KeystoreSignatureConfiguration ..
 type KeystoreSignatureConfiguration struct {
@@ -38,17 +25,14 @@ type KeystoreSignatureConfiguration struct {
 
 // SignatureConfiguration ...
 type SignatureConfiguration struct {
-	apkSigner               string
-	signerScheme            string
-	debuggablePermitted     string
-	signatureType           SignatureType
-	certiciateConfiguration *CertificateSignatureConfiguration
-	pcksConfiguartion       *PKCSSignatureConfiguration
-	keystoreConfiguration   *KeystoreSignatureConfiguration
+	apkSigner             string
+	signerScheme          string
+	debuggablePermitted   string
+	signatureType         SignatureType
+	keystoreConfiguration *KeystoreSignatureConfiguration
 }
 
 func buildAPKSignerPath() (string, error) {
-
 	androidHome := os.Getenv("ANDROID_HOME")
 	androidSDK, err := sdk.New(androidHome)
 	signer, err := androidSDK.LatestBuildToolPath("apksigner")
@@ -62,7 +46,6 @@ func buildAPKSignerPath() (string, error) {
 
 // NewKeystoreSignatureConfiguration ...
 func NewKeystoreSignatureConfiguration(keystore string, keystorePassword string, alias string, aliasPassword string, debuggablePermitted string, signerScheme string) (SignatureConfiguration, error) {
-
 	apkSigner, err := buildAPKSignerPath()
 
 	if err != nil {
@@ -82,49 +65,5 @@ func NewKeystoreSignatureConfiguration(keystore string, keystorePassword string,
 		signerScheme:          signerScheme,
 		signatureType:         KeystoreSignatureType,
 		keystoreConfiguration: &keystoreConfig,
-	}, nil
-}
-
-// NewCertificateConfiguration ...
-func NewCertificateConfiguration(key string, certificate string, debuggablePermitted string, signerScheme string) (SignatureConfiguration, error) {
-
-	apkSigner, err := buildAPKSignerPath()
-
-	if err != nil {
-		return SignatureConfiguration{}, err
-	}
-
-	certificateConfig := CertificateSignatureConfiguration{
-		certificatePath: certificate,
-		keyPath:         key,
-	}
-
-	return SignatureConfiguration{
-		apkSigner:               apkSigner,
-		debuggablePermitted:     debuggablePermitted,
-		signerScheme:            signerScheme,
-		signatureType:           CertificateSignatureType,
-		certiciateConfiguration: &certificateConfig,
-	}, nil
-}
-
-// NewPKCSConfiguration ...
-func NewPKCSConfiguration(providerArgument string, debuggablePermitted string, signerScheme string) (SignatureConfiguration, error) {
-	apkSigner, err := buildAPKSignerPath()
-
-	if err != nil {
-		return SignatureConfiguration{}, err
-	}
-
-	pkcsConfiguration := PKCSSignatureConfiguration{
-		providerArgument: providerArgument,
-	}
-
-	return SignatureConfiguration{
-		apkSigner:           apkSigner,
-		debuggablePermitted: debuggablePermitted,
-		signerScheme:        signerScheme,
-		signatureType:       PKCSSignatureType,
-		pcksConfiguartion:   &pkcsConfiguration,
 	}, nil
 }

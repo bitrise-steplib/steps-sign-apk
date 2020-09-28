@@ -462,29 +462,6 @@ func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArti
 	return fullPath
 }
 
-func prepareBuildArtifact(buildArtifactPath string, unsignedBuildArtifactPth string, aapt string) {
-	if err := command.CopyFile(buildArtifactPath, unsignedBuildArtifactPth); err != nil {
-		failf("Failed to copy build artifact, error: %s", err)
-	}
-
-	isSigned, err := isBuildArtifactSigned(aapt, unsignedBuildArtifactPth)
-	if err != nil {
-		failf("Failed to check if build artifact is signed, error: %s", err)
-	}
-
-	if isSigned {
-		log.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the build artifact...")
-		if err := unsignBuildArtifact(aapt, unsignedBuildArtifactPth); err != nil {
-			failf("Failed to unsign Build Artifact, error: %s", err)
-		}
-		fmt.Println()
-	} else {
-		log.Printf("No signature file (DSA or RSA) found in META-INF, skipping build artifact unsign...")
-		fmt.Println()
-	}
-	// ---
-}
-
 func zipAlignArtifact(zipalign, unalignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, fullPathExt string, outputName string, pageAlignConfig pageAlignStatus) (string, error) {
 	log.Infof("Zipalign Build Artifact")
 	signedArtifactName := fmt.Sprintf("%s-bitrise-%s%s", buildArtifactBasename, fullPathExt, artifactExt)
@@ -497,7 +474,7 @@ func zipAlignArtifact(zipalign, unalignedBuildArtifactPth string, buildArtifactD
 	pageAlign := pageAlignConfig == pageAlignYes
 	// Only care about .so memory page alignment for APKs
 	if !strings.EqualFold(artifactExt, ".aab") && pageAlignConfig == pageAlignAuto {
-		extractNativeLibs, err := parseAPKextractNativeLibs(fullPath)
+		extractNativeLibs, err := parseAPKextractNativeLibs(unalignedBuildArtifactPth)
 		if err != nil {
 			log.Warnf("Failed to parse APK manifest to read extractNativeLibs attribute: %s", err)
 			pageAlign = true
