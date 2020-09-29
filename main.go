@@ -329,8 +329,8 @@ func main() {
 	signedAPKPaths := make([]string, 0)
 	signedAABPaths := make([]string, 0)
 
-	log.Infof("signing %d Build Artifacts", len(buildArtifactPaths))
 	fmt.Println()
+	log.Infof("Signing %d Build Artifacts", len(buildArtifactPaths))
 
 	if len(buildArtifactPaths) > 1 && cfg.OutputName != "" {
 		log.Warnf("output_name is set and more than one artifact found, disabling artifact renaming as it would result in overwriting exported artifacts")
@@ -431,8 +431,6 @@ func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, bui
 }
 
 func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, outputName string, apkSigner SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
-	log.Infof("Sign Build Artifact with APKSigner: %s", unsignedBuildArtifactPth)
-
 	alignedPath, err := zipAlignArtifact(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "aligned", "", pageAlignConfig)
 
 	if err != nil {
@@ -446,13 +444,14 @@ func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArti
 	}
 	fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
-	log.Infof("Signing build: %s", alignedPath)
-
+	fmt.Println()
+	log.Infof("Sign Build Artifact with APKSigner: %s", alignedPath)
 	err = apkSigner.SignBuidlArtifact(alignedPath, fullPath)
 	if err != nil {
 		failf("Failed to build artifact, error: %s", err)
 	}
 
+	fmt.Println()
 	log.Infof("Verify Build Artifact")
 	err = apkSigner.VerifyBuildArtifact(fullPath)
 	if err != nil {
