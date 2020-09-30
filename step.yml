@@ -54,6 +54,107 @@ toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-sign-apk
 inputs:
+  - android_app: "$BITRISE_APK_PATH\n$BITRISE_AAB_PATH"
+    opts:
+      title: "App file path."
+      summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`"
+      description: |-
+        Path(s) to the build artifact file to sign (`.aab` or `.apk`).
+
+        You can provide multiple build artifact file paths separated by `|` character.
+
+        Format examples:
+
+        - `/path/to/my/app.apk`
+        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
+
+        - `/path/to/my/app.aab`
+        - `/path/to/my/app1.aab|/path/to/my/app2.apk|/path/to/my/app3.aab`
+      is_required: true
+  - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_URL
+    opts:
+      title: "Keystore url"
+      description: |-
+        For remote keystores you can provide any download location (ex: https://URL/TO/keystore.jks).
+        For local keystores provide file path url. (ex: file://PATH/TO/keystore.jks).
+      is_required: true
+      is_sensitive: true
+  - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+    opts:
+      title: "Keystore password"
+      is_required: true
+      is_sensitive: true
+  - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+    opts:
+      title: "Key alias"
+      is_required: true
+      is_sensitive: true
+  - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+    opts:
+      title: "Key password"
+      is_sensitive: true
+  - page_align: "automatic"
+    opts:
+      title: "Page alignment"
+      is_required: true
+      value_options:
+      - "true"
+      - "false"
+      - "automatic"
+      description: |
+        If enabled, it tells zipalign to use memory page alignment for stored shared object files.
+
+        - `automatic`: Enable page alignment for .so files, unless atribute `extractNativeLibs="true"` is set in the AndroidManifest.xml
+        - `true`: Enable memory page alignment for .so files
+        - `false`: Disable memory page alignment for .so files
+  - use_apk_signer: "false"
+    opts:
+      title: "Enables apksigner"
+      description: "Indicates if the signature should be done using apksigner instead of jarsigner."
+      is_required: true
+      value_options:
+      - "true"
+      - "false"
+  - signer_scheme: "automatic"
+    opts:
+      title: "APK Signature Scheme"
+      is_required: true
+      value_options:
+      - "automatic"
+      - "v2"
+      - "v3"
+      - "v4"
+      description: |
+        If set, enforces which Signature Scheme should be used by the project.
+
+        - `automatic`: The tool uses the values of --min-sdk-version and --max-sdk-version to decide when to apply this Signature Scheme.
+        - `v2`: Sets --v2-signing-enabled true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v2.
+        - `v3`: Sets --v3-signing-enabled true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v3.
+        - `v4`: Sets --v4-signing-enabled true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v4. This scheme produces a signature in an separate file (apk-name.apk.idsig). If true and the APK is not signed, then a v2 or v3 signature is generated based on the values of --min-sdk-version and --max-sdk-version.
+  - debuggable_permitted: true
+    opts:
+      title: "Enable debuggable APKs"
+      is_required: true
+      value_options:
+      - "true"
+      - "false"
+      description: |
+        Whether to permit signing android:debuggable="true" APKs. Android disables some of its security protections for such apps.
+  - output_name: ""
+    opts:
+      title: "Artifact name"
+      summary: 'Name of the produced output artifact'
+      description: |
+        If is empty then the output name is "app-release-bitrise-signed".
+        Else it's the specified name. Do not add extensione here.
+  - verbose_log: "false"
+    opts:
+      title: "Enable verbose logging?"
+      description: Enable verbose logging?
+      is_required: true
+      value_options:
+      - "true"
+      - "false"
   - apk_path:
     opts:
       title: "[DEPRECATED] Build artifact path."
@@ -76,124 +177,6 @@ inputs:
         - `/path/to/my/app.aab`
         - `/path/to/my/app1.aab|/path/to/my/app2.apk|/path/to/my/app3.aab`
       is_required: true
-  - android_app: "$BITRISE_APK_PATH\n$BITRISE_AAB_PATH"
-    opts:
-      title: "App file path."
-      summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`"
-      description: |-
-        Path(s) to the build artifact file to sign (`.aab` or `.apk`).
-
-        You can provide multiple build artifact file paths separated by `|` character.
-
-        Format examples:
-
-        - `/path/to/my/app.apk`
-        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
-
-        - `/path/to/my/app.aab`
-        - `/path/to/my/app1.aab|/path/to/my/app2.apk|/path/to/my/app3.aab`
-      is_required: true
-  - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_URL
-    opts:
-      title: "Keystore url"
-      summary: ""
-      description: |-
-        For remote keystores you can provide any download location (ex: https://URL/TO/keystore.jks).
-        For local keystores provide file path url. (ex: file://PATH/TO/keystore.jks).
-      is_required: true
-      is_sensitive: true
-  - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
-    opts:
-      title: "Keystore password"
-      summary: ""
-      description: ""
-      is_required: true
-      is_sensitive: true
-  - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
-    opts:
-      title: "Keystore alias"
-      summary: ""
-      description: ""
-      is_required: true
-      is_sensitive: true
-  - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
-    opts:
-      title: "Private key password"
-      summary: ""
-      description: |
-        If key password equals to keystore password, you can leave it empty.
-        Otherwise specify the private key password.
-      is_sensitive: true
-  - page_align: "automatic"
-    opts:
-      title: "Page alignment"
-      summary: ""
-      is_sensitive: false
-      is_required: true
-      value_options:
-      - "true"
-      - "false"
-      - "automatic"
-      description: |
-        If enabled, it tells zipalign to use memory page alignment for stored shared object files.
-
-        - `automatic`: Enable page alignment for .so files, unless atribute `extractNativeLibs="true"` is set in the AndroidManifest.xml
-        - `true`: Enable memory page alignment for .so files
-        - `false`: Disable memory page alignment for .so files
-  - signer_scheme: "automatic"
-    opts:
-      title: "APK Signature scheme"
-      sumarry: ""
-      is_sensitive: false
-      is_required: true
-      value_options:
-      - "automatic"
-      - "v2"
-      - "v3"
-      - "v4"
-      description: |
-        If set, enforces which Signature Scheme should be used by the project.
-
-        - `automatic`: The tool uses the values of --min-sdk-version and --max-sdk-version to decide when to apply this signature scheme.
-        - `v2`: Sets --v2-signing-enabled true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v2.
-        - `v3`: Sets --v3-signing-enabled true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v3.
-        - `v4`: Sets --v4-signing-enabled true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v4. This scheme produces a signature in an separate file (apk-name.apk.idsig). If true and the APK is not signed, then a v2 or v3 signature is generated based on the values of --min-sdk-version and --max-sdk-version.
-  - debuggable_permitted: true
-    opts:
-      title: "Enable debuggable APKs"
-      sumarry: ""
-      is_sensitive: false
-      is_required: true
-      value_options:
-      - "true"
-      - "false"
-      description: |
-        Whether to permit signing android:debuggable="true" APKs. Android disables some of its security protections for such apps.
-  - output_name: ""
-    opts:
-      title: "Artifact name"
-      summary: 'Name of the produced output artifact'
-      is_sensitive: false
-      description: |
-        If is empty then the output name is "app-release-bitrise-signed".
-        Else it's the specified name. Do not add extensione here.
-  - verbose_log: "false"
-    opts:
-      title: "Enable verbose logging?"
-      description: Enable verbose logging?
-      is_required: true
-      value_options:
-      - "true"
-      - "false"
-  - use_apk_signer: "false"
-    opts:
-      title: "Enables APK Signer"
-      description: "Indicates if the signature should be done using APK Signer instead of JAR Signer"
-      is_required: true
-      is_sensitive: false
-      value_options:
-      - "true"
-      - "false"
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
