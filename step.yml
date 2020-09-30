@@ -92,6 +92,9 @@ inputs:
   - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
     opts:
       title: "Key password"
+      description: |
+        If key password equals to keystore password (not recommended), you can leave it empty.
+        Otherwise specify the private key password.
       is_sensitive: true
   - page_align: "automatic"
     opts:
