@@ -202,19 +202,33 @@ func unsignBuildArtifact(aapt, pth string) error {
 	return removeFilesFromBuildArtifact(aapt, pth, signingFiles)
 }
 
-func zipalignBuildArtifact(zipalign, pth, dstPth string, pageAlign bool) error {
-	cmdSlice := []string{zipalign}
+func zipalignBuildArtifact(zipalign, pth, dstPth string, pageAlign bool) (string, error) {
+	checkCmdSlice := []string{zipalign}
+	if pageAlign {
+		checkCmdSlice = append(checkCmdSlice, "-p")
+	}
+	checkCmdSlice = append(checkCmdSlice, "-c", "4", pth)
 
+	err := keystore.Execute(checkCmdSlice)
+	if err != nil {
+		if !errorutil.IsExitStatusError(err) {
+			return "", err
+		}
+		// Artifact not zipaligned correctly
+	} else {
+		log.Printf("Artifact alignment confirmed.")
+		return pth, nil
+	}
+
+	cmdSlice := []string{zipalign}
 	if pageAlign {
 		cmdSlice = append(cmdSlice, "-p")
 	}
-
 	cmdSlice = append(cmdSlice, "-f", "4", pth, dstPth)
-	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
-	log.Printf("=> %s", prinatableCmd)
+	log.Printf("=> %s", command.PrintableCommandArgs(false, cmdSlice))
 
-	_, err := keystore.ExecuteForOutput(cmdSlice)
-	return err
+	_, err = keystore.ExecuteForOutput(cmdSlice)
+	return dstPth, nil
 }
 
 func prettyBuildArtifactBasename(buildArtifactPth string) string {
@@ -482,11 +496,12 @@ func zipAlignArtifact(zipalign, unalignedBuildArtifactPth string, buildArtifactD
 		}
 	}
 
-	if err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath, pageAlign); err != nil {
+	zipalignedPath, err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath, pageAlign)
+	if err != nil {
 		failf("Failed to zipalign Build Artifact, error: %s", err)
 	}
 
-	return fullPath, nil
+	return zipalignedPath, nil
 }
 
 func exportAPK(signedAPKPaths []string, joinedAPKOutputPaths string) {
