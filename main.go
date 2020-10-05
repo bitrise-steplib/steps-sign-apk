@@ -228,7 +228,7 @@ func zipalignBuildArtifact(zipalign, pth, dstPth string, pageAlign bool) (string
 	log.Printf("=> %s", command.PrintableCommandArgs(false, cmdSlice))
 
 	_, err = keystore.ExecuteForOutput(cmdSlice)
-	return dstPth, nil
+	return dstPth, err
 }
 
 func prettyBuildArtifactBasename(buildArtifactPth string) string {
