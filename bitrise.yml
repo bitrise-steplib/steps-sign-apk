@@ -3,7 +3,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-samples/sample-apps-android-abi-split.git
+  - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-io/sample-apps-android-abi-split.git
   - BRANCH: master
   - GRADLEW_PATH: "./gradlew"
 
@@ -12,6 +12,22 @@ app:
   - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
   - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
   - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_1_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
+  - BITRISEIO_ANDROID_KEYSTORE_PASSWORD_1: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_ALIAS_1: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+  - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_1: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_2_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
+  - BITRISEIO_ANDROID_KEYSTORE_PASSWORD_2: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_ALIAS_2: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+  - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_2: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_3_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
+  - BITRISEIO_ANDROID_KEYSTORE_PASSWORD_3: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_ALIAS_3: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+  - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_3: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_4_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
+  - BITRISEIO_ANDROID_KEYSTORE_PASSWORD_4: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_ALIAS_4: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+  - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
 
 workflows:
   # ----------------------------------------------------------------
@@ -84,20 +100,18 @@ workflows:
         inputs:
         - gradle_task: "$GRADLE_TASK"
         - gradlew_path: "$GRADLEW_PATH"
-        - apk_file_include_filter: $APK_FILE_INCLUDE_FILTER
+        - app_file_include_filter: $APK_FILE_INCLUDE_FILTER
 
   test:
     steps:
+    # - path::./:
+    #     title: Step Test - keystore pass == key pass with Jar signer
+    #     inputs:
+    #     - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_1_URL
+    #     - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_1
+    #     - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_1
+    #     - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_1
     - path::./:
-        is_skippable: true
-        title: Step Test - keystore pass == key pass with Jar signer
-        inputs:
-        - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_1_URL
-        - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_1
-        - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_1
-        - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_1
-    - path::./:
-        is_skippable: true
         title: Step Test - keystore pass == key pass with APK signer
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_1_URL
@@ -106,7 +120,6 @@ workflows:
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_1
         - use_apk_signer: true
     - path::./:
-        is_skippable: true
         title: Step Test - keystore pass != key pass with Jar signer
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_2_URL
@@ -114,7 +127,6 @@ workflows:
         - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_2
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_2
     - path::./:
-        is_skippable: true
         title: Step Test - keystore pass != key pass with APK signer
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_2_URL
@@ -123,7 +135,6 @@ workflows:
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_2
         - use_apk_signer: true
     - path::./:
-        is_skippable: true
         title: Step Test - default alias
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_3_URL
@@ -131,7 +142,6 @@ workflows:
         - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_3
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_3
     - path::./:
-        is_skippable: true
         title: Step Test - default alias with APK signer
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_3_URL
@@ -140,7 +150,6 @@ workflows:
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_3
         - use_apk_signer: true
     - path::./:
-        is_skippable: true
         title: Step Test - android studio generated keystore (jks)
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_4_URL
@@ -148,7 +157,6 @@ workflows:
         - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_4
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4
     - path::./:
-        is_skippable: true
         title: Step Test - android studio generated keystore (jks) with APK signer
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_4_URL
@@ -157,7 +165,6 @@ workflows:
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4
         - use_apk_signer: true
     - path::./:
-        is_skippable: true
         title: Step Test - android studio generated keystore (jks) + custom artifact name
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_4_URL
@@ -166,7 +173,6 @@ workflows:
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_4
         - output_name: "test-artifact-name"
     - path::./:
-        is_skippable: true
         title: Step Test - android studio generated keystore (jks) + custom artifact name with APK signer
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_4_URL
@@ -176,7 +182,6 @@ workflows:
         - output_name: "test-artifact-name"
         - use_apk_signer: true
     - path::./:
-        is_skippable: true
         title: Step Test - android studio generated keystore (jks) + custom artifact name second time to see collisions if any
         inputs:
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_4_URL
