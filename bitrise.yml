@@ -3,8 +3,6 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - BITRISE_STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-sign-apk.git
-
   - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-samples/sample-apps-android-abi-split.git
   - BRANCH: master
   - GRADLEW_PATH: "./gradlew"
@@ -78,7 +76,7 @@ workflows:
             git remote add origin "${SAMPLE_APP_REPOSITORY_URL}"
             git fetch || exit 1
             [[ -n "${COMMIT}" ]] && git checkout "${COMMIT}" || git checkout "${BRANCH}"
-    - install-missing-android-tools@2.3.3:
+    - install-missing-android-tools:
         inputs:
         - ndk_revision: '16'
         run_if: ".IsCI"
