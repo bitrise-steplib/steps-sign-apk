@@ -202,35 +202,6 @@ func unsignBuildArtifact(aapt, pth string) error {
 	return removeFilesFromBuildArtifact(aapt, pth, signingFiles)
 }
 
-func zipalignBuildArtifact(zipalign, pth, dstPth string, pageAlign bool) (string, error) {
-	checkCmdSlice := []string{zipalign}
-	if pageAlign {
-		checkCmdSlice = append(checkCmdSlice, "-p")
-	}
-	checkCmdSlice = append(checkCmdSlice, "-c", "4", pth)
-
-	err := keystore.Execute(checkCmdSlice)
-	if err != nil {
-		if !errorutil.IsExitStatusError(err) {
-			return "", err
-		}
-		// Artifact not zipaligned correctly
-	} else {
-		log.Printf("Artifact alignment confirmed.")
-		return pth, nil
-	}
-
-	cmdSlice := []string{zipalign}
-	if pageAlign {
-		cmdSlice = append(cmdSlice, "-p")
-	}
-	cmdSlice = append(cmdSlice, "-f", "4", pth, dstPth)
-	log.Printf("=> %s", command.PrintableCommandArgs(false, cmdSlice))
-
-	_, err = keystore.ExecuteForOutput(cmdSlice)
-	return dstPth, err
-}
-
 func prettyBuildArtifactBasename(buildArtifactPth string) string {
 	buildArtifactBasenameWithExt := path.Base(buildArtifactPth)
 	buildArtifactExt := filepath.Ext(buildArtifactBasenameWithExt)
@@ -436,9 +407,8 @@ func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, bui
 	fmt.Println()
 
 	fullPath, err := zipAlignArtifact(zipalign, unalignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "signed", outputName, pageAlignConfig)
-
 	if err != nil {
-		failf("Failed to zip align artifact, error: %s", err)
+		failf("Failed to zipalign Build Artifact: %s", err)
 	}
 
 	return fullPath
@@ -446,9 +416,8 @@ func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, bui
 
 func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, outputName string, apkSigner SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
 	alignedPath, err := zipAlignArtifact(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "aligned", "", pageAlignConfig)
-
 	if err != nil {
-		failf("Failed to zip align artifact, error: %s", err)
+		failf("Failed to zipalign Build Artifact, error: %s", err)
 	}
 
 	signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
@@ -473,35 +442,6 @@ func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArti
 	}
 
 	return fullPath
-}
-
-func zipAlignArtifact(zipalign, unalignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, fullPathExt string, outputName string, pageAlignConfig pageAlignStatus) (string, error) {
-	log.Infof("Zipalign Build Artifact")
-	signedArtifactName := fmt.Sprintf("%s-bitrise-%s%s", buildArtifactBasename, fullPathExt, artifactExt)
-	if artifactName := fmt.Sprintf("%s%s", outputName, artifactExt); outputName != "" {
-		log.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
-		signedArtifactName = artifactName
-	}
-	fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
-
-	pageAlign := pageAlignConfig == pageAlignYes
-	// Only care about .so memory page alignment for APKs
-	if !strings.EqualFold(artifactExt, ".aab") && pageAlignConfig == pageAlignAuto {
-		extractNativeLibs, err := parseAPKextractNativeLibs(unalignedBuildArtifactPth)
-		if err != nil {
-			log.Warnf("Failed to parse APK manifest to read extractNativeLibs attribute: %s", err)
-			pageAlign = true
-		} else {
-			pageAlign = !extractNativeLibs
-		}
-	}
-
-	zipalignedPath, err := zipalignBuildArtifact(zipalign, unalignedBuildArtifactPth, fullPath, pageAlign)
-	if err != nil {
-		failf("Failed to zipalign Build Artifact, error: %s", err)
-	}
-
-	return zipalignedPath, nil
 }
 
 func exportAPK(signedAPKPaths []string, joinedAPKOutputPaths string) {
