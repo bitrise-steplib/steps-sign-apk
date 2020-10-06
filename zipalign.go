@@ -5,24 +5,23 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
 )
 
-func zipalignBuildArtifact(zipalignConfig *zipalignConfiguration, artifactPath, dstPath string) (string, error) {
+func zipalignBuildArtifact(zipalignConfig *zipalignConfiguration, artifactPath, dstPath string) error {
 	aligned, err := zipalignConfig.checkAlignment(artifactPath)
 	if err != nil {
-		return "", err
+		return err
 	}
 	if aligned {
-		return artifactPath, nil
+		if err := command.CopyFile(artifactPath, dstPath); err != nil {
+			return fmt.Errorf("failed to copy build artifact: %s", err)
+		}
+		return nil
 	}
 
-	err = zipalignConfig.zipalignArtifact(artifactPath, dstPath)
-	if err != nil {
-		return "", err
-	}
-
-	return dstPath, err
+	return zipalignConfig.zipalignArtifact(artifactPath, dstPath)
 }
 
 func zipAlignArtifact(zipalignPath, unalignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, fullPathExt string, outputName string, pageAlignConfig pageAlignStatus) (string, error) {
@@ -46,6 +45,6 @@ func zipAlignArtifact(zipalignPath, unalignedBuildArtifactPth string, buildArtif
 		}
 	}
 
-	return zipalignBuildArtifact(newZipalignConfiguration(zipalignPath, isPageAligned),
+	return fullPath, zipalignBuildArtifact(newZipalignConfiguration(zipalignPath, isPageAligned),
 		unalignedBuildArtifactPth, fullPath)
 }
