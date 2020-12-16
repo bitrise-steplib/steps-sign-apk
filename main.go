@@ -143,7 +143,7 @@ func filterMETAFiles(fileList []string) []string {
 }
 
 func filterSigningFiles(fileList []string) []string {
-	signingFiles := []string{}
+	var signingFiles []string
 	for _, file := range fileList {
 		ext := filepath.Ext(file)
 		for _, signExt := range signingFileExts {
@@ -155,8 +155,8 @@ func filterSigningFiles(fileList []string) []string {
 	return signingFiles
 }
 
-func removeFilesFromBuildArtifact(aapt, pth string, files []string) error {
-	cmdSlice := append([]string{aapt, "remove", pth}, files...)
+func removeFilesFromBuildArtifact(pth string, files []string) error {
+	cmdSlice := append([]string{"zip", "-d", pth}, files...)
 
 	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
 	log.Printf("=> %s", prinatableCmd)
@@ -199,7 +199,7 @@ func unsignBuildArtifact(aapt, pth string) error {
 		return nil
 	}
 
-	return removeFilesFromBuildArtifact(aapt, pth, signingFiles)
+	return removeFilesFromBuildArtifact(pth, signingFiles)
 }
 
 func prettyBuildArtifactBasename(buildArtifactPth string) string {
@@ -357,7 +357,7 @@ func main() {
 			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
 			signedAABPaths = append(signedAABPaths, fullPath)
 		} else if cfg.UseAPKSigner {
-			fullPath := signAPK(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.OutputName, apkSigner, pageAlignConfig)
+			fullPath := signAPK(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.OutputName, apkSigner, pageAlignConfig)
 			signedAPKPaths = append(signedAPKPaths, fullPath)
 		} else {
 			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
@@ -414,7 +414,7 @@ func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, bui
 	return fullPath
 }
 
-func signAPK(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, outputName string, apkSigner SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
+func signAPK(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, outputName string, apkSigner SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
 	alignedPath, err := zipAlignArtifact(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "aligned", "", pageAlignConfig)
 	if err != nil {
 		failf("Failed to zipalign Build Artifact, error: %s", err)
