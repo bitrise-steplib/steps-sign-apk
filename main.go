@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -155,8 +156,8 @@ func filterSigningFiles(fileList []string) []string {
 	return signingFiles
 }
 
-func removeFilesFromBuildArtifact(pth string, files []string) error {
-	cmdSlice := append([]string{"zip", "-d", pth}, files...)
+func removeFilesFromBuildArtifact(zip, pth string, files []string) error {
+	cmdSlice := append([]string{zip, "-d", pth}, files...)
 
 	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
 	log.Printf("=> %s", prinatableCmd)
@@ -185,7 +186,7 @@ func isBuildArtifactSigned(aapt, pth string) (bool, error) {
 	return false, nil
 }
 
-func unsignBuildArtifact(aapt, pth string) error {
+func unsignBuildArtifact(zip, aapt, pth string) error {
 	filesInBuildArtifact, err := listFilesInBuildArtifact(aapt, pth)
 	if err != nil {
 		return err
@@ -199,7 +200,7 @@ func unsignBuildArtifact(aapt, pth string) error {
 		return nil
 	}
 
-	return removeFilesFromBuildArtifact(pth, signingFiles)
+	return removeFilesFromBuildArtifact(zip, pth, signingFiles)
 }
 
 func prettyBuildArtifactBasename(buildArtifactPth string) string {
@@ -307,6 +308,12 @@ func main() {
 	if err != nil {
 		failf("Failed to create keystore helper, error: %s", err)
 	}
+
+	zip, err := exec.LookPath("zip")
+	if err != nil {
+		failf("Failed to find zip path, error: %s", err)
+	}
+	log.Printf("zip: %s", zip)
 	// ---
 
 	// Sign build artifacts
@@ -344,7 +351,7 @@ func main() {
 
 		if isSigned {
 			log.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the build artifact...")
-			if err := unsignBuildArtifact(aapt, unsignedBuildArtifactPth); err != nil {
+			if err := unsignBuildArtifact(zip, aapt, unsignedBuildArtifactPth); err != nil {
 				failf("Failed to unsign Build Artifact, error: %s", err)
 			}
 			fmt.Println()
