@@ -3,23 +3,23 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:34c5b8720a28e2c9bf3446a9837ccfcdd941f08dd13559d69ef21628c81c0986"
+  digest = "1:4fe2e6075bab2557b3604a4276f234e9262afb875f131d7adc6a1c0880320d07"
   name = "github.com/avast/apkparser"
   packages = ["."]
   pruneopts = "UT"
-  revision = "64ac289075cff9515f68dad1fd66fc042cbf80d2"
+  revision = "6256c76f738e4dc04f5d2cc3e1cc0fbe83d89141"
 
 [[projects]]
   branch = "master"
-  digest = "1:a3afea7f3c972b809af1a79472585115af175fbf1bcc5bebccd495f19bb551db"
+  digest = "1:caf5b6526ab478df1debb4048cc99489d3954975457c4ba63441f489c9053ea2"
   name = "github.com/bitrise-io/go-steputils"
   packages = ["stepconf"]
   pruneopts = "UT"
-  revision = "f540824d77dfd382ce84fd0ee0a9da2fba1cce0a"
+  revision = "03ae3a6ded35c5e8aed0058ec270e3494d242d17"
 
 [[projects]]
   branch = "master"
-  digest = "1:49d27cf0a4ca8a0b4f53db90b387250c23d95078cc324e41a705c9cf6c1eed89"
+  digest = "1:2cbb173833639fcb45cff8fbb00ae32ec2da7ae7c789989ae2d63310b430dbd5"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -32,15 +32,15 @@
     "pointers",
   ]
   pruneopts = "UT"
-  revision = "fcff02f7bce9d2e56a989e6a78f4f4d12f9b516c"
+  revision = "859032e9adf02532a86a362ae5d1cfbc9292fcaf"
 
 [[projects]]
   branch = "master"
-  digest = "1:c050cdb51aa46952748e92cd29c78593c711a2ee4e84bf4e09dfbc7def71304d"
+  digest = "1:b7ff22f0d9609f56b01617b5fb550840f09b0a3eecf4e1ed0100854a40f9df54"
   name = "github.com/bitrise-tools/go-android"
   packages = ["sdk"]
   pruneopts = "UT"
-  revision = "34d6f20488bf0e2256c034c03a2a589a4a608e3f"
+  revision = "791fb4b5216b15b2341e79f3f494579e04745e25"
 
 [[projects]]
   branch = "master"
@@ -48,7 +48,7 @@
   name = "github.com/bitrise-tools/go-steputils"
   packages = ["tools"]
   pruneopts = "UT"
-  revision = "f540824d77dfd382ce84fd0ee0a9da2fba1cce0a"
+  revision = "03ae3a6ded35c5e8aed0058ec270e3494d242d17"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -59,12 +59,20 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:88e0b0baeb9072f0a4afbcf12dda615fc8be001d1802357538591155998da21b"
+  digest = "1:95732e0c27df672b3fdf5cdd8edd18cba5fc07263ef7cd25eaaad4afc4730313"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ac23dc3fea5d1a983c43f6a0f6e2c13f0195d8bd"
-  version = "v1.2.0"
+  revision = "59da58cfd357de719a4d16dac30481391a56c002"
+  version = "v1.2.1"
+
+[[projects]]
+  digest = "1:b919842ee22a43a7936f66cc476eae1d21e25f7507e243b97fd306c5df54525f"
+  name = "github.com/klauspost/compress"
+  packages = ["flate"]
+  pruneopts = "UT"
+  revision = "a576225a10eb8feafd84f269df11f0c26b7139e0"
+  version = "v1.11.9"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -75,15 +83,23 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:5da8ce674952566deae4dbc23d07c85caafc6cfa815b0b3e03e41979cedb8750"
+  digest = "1:5c7b4a9fefe5b7b160d2cf0ec8457de81db92038c45c88d7d59493568308cc5d"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "require",
   ]
   pruneopts = "UT"
-  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
-  version = "v1.3.0"
+  revision = "acba37e5db06f0093b465a7d47822bf13644b66c"
+  version = "v1.7.0"
+
+[[projects]]
+  branch = "v3"
+  digest = "1:107a619d3c3bcca214b2b7db810a5dffcd74b5d0262813cb2986e063fae2722f"
+  name = "gopkg.in/yaml.v3"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "496545a6307b2a7d7a710fd516e5e16e8ab62dbc"
 
 [solve-meta]
   analyzer-name = "dep"
