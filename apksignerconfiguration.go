@@ -35,10 +35,14 @@ type SignatureConfiguration struct {
 func buildAPKSignerPath() (string, error) {
 	androidHome := os.Getenv("ANDROID_HOME")
 	androidSDK, err := sdk.New(androidHome)
+	if err != nil {
+		return "", fmt.Errorf("could not locate Android SDK using environment variable ANDROID_HOME='%s': %s", androidHome, err)
+	}
+
 	signer, err := androidSDK.LatestBuildToolPath("apksigner")
 
 	if err != nil {
-		return "", fmt.Errorf("failed to create sdk model, error: %s", err)
+		return "", fmt.Errorf("failed to create sdk model: %s", err)
 	}
 
 	return signer, err

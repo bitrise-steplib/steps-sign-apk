@@ -48,8 +48,8 @@ func createKeystoreCmdSlice(configuration *KeystoreSignatureConfiguration) ([]st
 }
 
 func (configuration SignatureConfiguration) createSignCmd(buildArtifactPth string, destBuildArtifactPth string) ([]string, error) {
-	var signatureSlice []string = []string{}
-	var err error = nil
+	var signatureSlice []string
+	var err error
 
 	switch configuration.signatureType {
 	case KeystoreSignatureType:
@@ -93,6 +93,9 @@ func (configuration SignatureConfiguration) createSignCmd(buildArtifactPth strin
 // - destBuildArtifactPth: Path were the signed APK will be stored
 func (configuration SignatureConfiguration) SignBuildArtifact(buildArtifactPth string, destBuildArtifactPth string) error {
 	cmdSlice, err := configuration.createSignCmd(buildArtifactPth, destBuildArtifactPth)
+	if err != nil {
+		return fmt.Errorf("failed to create signing command from signing configuration: %v", err)
+	}
 
 	prinatableCmd := command.PrintableCommandArgs(false, secureSignCmd(cmdSlice))
 	log.Printf("=> %s", prinatableCmd)
