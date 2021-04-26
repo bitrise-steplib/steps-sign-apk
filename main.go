@@ -11,14 +11,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bitrise-io/go-android/sdk"
 	"github.com/bitrise-io/go-steputils/stepconf"
+	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-steplib/steps-sign-apk/keystore"
-	"github.com/bitrise-tools/go-android/sdk"
-	"github.com/bitrise-tools/go-steputils/tools"
 )
 
 var signingFileExts = []string{".mf", ".rsa", ".dsa", ".ec", ".sf"}

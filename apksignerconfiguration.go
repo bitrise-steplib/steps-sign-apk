@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bitrise-tools/go-android/sdk"
+	"github.com/bitrise-io/go-android/sdk"
 )
 
 // SignatureType ..
