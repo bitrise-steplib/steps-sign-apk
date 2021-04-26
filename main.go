@@ -436,7 +436,7 @@ func signAPK(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifact
 
 	fmt.Println()
 	log.Infof("Sign Build Artifact with APKSigner: %s", alignedPath)
-	err = apkSigner.SignBuidlArtifact(alignedPath, fullPath)
+	err = apkSigner.SignBuildArtifact(alignedPath, fullPath)
 	if err != nil {
 		failf("Failed to build artifact, error: %s", err)
 	}

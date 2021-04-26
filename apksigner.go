@@ -84,14 +84,14 @@ func (configuration SignatureConfiguration) createSignCmd(buildArtifactPth strin
 	return cmdSlice, nil
 }
 
-// SignBuidlArtifact buildArtifactPth
+// SignBuildArtifact buildArtifactPth
 // This signs the provided APK, stripping out any pre-existing signatures. Signing
 // is performed using one or more signers, each represented by an asymmetric key
 // pair and a corresponding certificate.
 //
 // - buildArtifactPth: The path to the unsigned APK
 // - destBuildArtifactPth: Path were the signed APK will be stored
-func (configuration SignatureConfiguration) SignBuidlArtifact(buildArtifactPth string, destBuildArtifactPth string) error {
+func (configuration SignatureConfiguration) SignBuildArtifact(buildArtifactPth string, destBuildArtifactPth string) error {
 	cmdSlice, err := configuration.createSignCmd(buildArtifactPth, destBuildArtifactPth)
 
 	prinatableCmd := command.PrintableCommandArgs(false, secureSignCmd(cmdSlice))
