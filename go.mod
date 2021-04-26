@@ -7,8 +7,6 @@ require (
 	github.com/bitrise-io/go-android v0.0.0-20210301151701-791fb4b5216b
 	github.com/bitrise-io/go-steputils v0.0.0-20210324082442-21a1b8f2b237
 	github.com/bitrise-io/go-utils v0.0.0-20210323091856-00429d8e1e87
-	github.com/bitrise-tools/go-android v0.0.0-20210301151701-791fb4b5216b // indirect
-	github.com/bitrise-tools/go-steputils v0.0.0-20201016102104-03ae3a6ded35 // indirect
 	github.com/hashicorp/go-version v1.3.0 // indirect
 	github.com/klauspost/compress v1.12.1 // indirect
 	github.com/stretchr/testify v1.7.0
