@@ -4,7 +4,7 @@ Signs your APK or Android App Bundle to be uploaded to the Google Play Store.
 
 ## Examples
 
-### List packages in the working directory excluding vendor/*
+### Build a bundle and sign it
 
 ```yml
 ---
