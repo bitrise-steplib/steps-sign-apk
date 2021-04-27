@@ -73,12 +73,12 @@ workflows:
 | keystore_password | Keystore password | ✔️ | *$BITRISEIO_ANDROID_KEYSTORE_PASSWORD* |
 | keystore_alias | Key alias |  ✔️ | *$BITRISEIO_ANDROID_KEYSTORE_ALIAS* |
 | private_key_password | Key password. If key password equals to keystore password (not recommended), you can leave it empty. | - | *$BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD* |
-| page_align | If enabled, it tells zipalign to use memory page alignment for stored shared object files. `automatic`: Enable page alignment for .so files, unless attribute `extractNativeLibs="true"` is set in the AndroidManifest.xml. `true`: Enable memory page alignment for .so files. `false`: Disable memory page alignment for .so files | ✔️ | `automatic` |
-| use_apk_signer | Indicates if the signature should be done using apksigner instead of jarsigner. Options: `true`, `false` | ✔️ | `false` |
+| page_align | If enabled, it tells zipalign to use memory page alignment for stored shared object files. Options: `automatic` (Enable page alignment for .so files, unless attribute *extractNativeLibs="true"* is set in the AndroidManifest.xml); `true`; `false` | ✔️ | `automatic` |
+| use_apk_signer | Indicates if the signature should be done using apksigner instead of jarsigner. Options: `true`, `false`. | ✔️ | `false` |
 | signer_scheme | APK Signature Scheme. `automatic` uses the values of --min-sdk-version and --max-sdk-version to decide which Signature Scheme to use. Options: `v2`, `v3`, `v4`, `automatic`. | ✔️ | `automatic` |
 | debuggable_permitted | Whether to permit signing android:debuggable="true" APKs. Android disables some of its security protections for such apps. Options: `true`, `false`. | ✔️ | `true` |
 | output_name | Name of the produced output artifact. By default the output name is *app-release-bitrise-signed*. Else it's the specified name. Do not add extensions. | - | "" |
-| verbose_log | Enables verbose logging. | ✔️ | `false` |
+| verbose_log | Enables verbose logging. Options: `true`, `false`. | ✔️ | `false` |
 | apk_path | *deprecated* | - | - |
 
 ### Outputs
