@@ -228,10 +228,10 @@ workflows:
     - path::./:
         title: Step Test - default alias
         inputs:
-        - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_3_URL
-        - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD_3
-        - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS_3
-        - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD_3
+        - keystore_url: $ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_URL
+        - keystore_password: $ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_PASSWORD
+        - keystore_alias: $ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_ALIAS
+        - private_key_password: $ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_PRIVATE_KEY_PASSWORD
         - use_apk_signer: $APK_SIGNER
 
   test4:
@@ -239,10 +239,10 @@ workflows:
     - path::./:
         title: Step Test - android studio generated keystore (jks)
         inputs:
-        - keystore_url: $ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_URL
-        - keystore_password: $ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_PASSWORD
-        - keystore_alias: $ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_ALIAS
-        - private_key_password: $ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_PRIVATE_KEY_PASSWORD
+        - keystore_url: $ANDROID_SIGN_STUDIO_GEN_KEYSTORE_URL
+        - keystore_password: $ANDROID_SIGN_STUDIO_GEN_KEYSTORE_PASSWORD
+        - keystore_alias: $ANDROID_SIGN_STUDIO_GEN_KEYSTORE_ALIAS
+        - private_key_password: $ANDROID_SIGN_STUDIO_GEN_KEYSTORE_PRIVATE_KEY_PASSWORD
         - use_apk_signer: $APK_SIGNER
 
   test5:

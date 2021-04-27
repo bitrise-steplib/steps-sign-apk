@@ -96,7 +96,7 @@ workflows:
 
 We welcome [pull requests](https://github.com/bitrise-steplib/steps-sign-apk/pulls) and [issues](https://github.com/bitrise-steplib/steps-sign-apk/issues) against this repository. 
 
-For pull requests, work on your changes in a forked repository and use the bitrise cli to [run your tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/)
+For pull requests, work on your changes in a forked repository and use the bitrise cli to [run your tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
 
 ## Development environment
 
@@ -142,4 +142,4 @@ envs:
 
 ### Creating your own steps
 
-Follow [this guide](https://devcenter.bitrise.io/contributors/create-your-own-step/) if you would like to create your own step
+Follow [this guide](https://devcenter.bitrise.io/contributors/create-your-own-step/) if you would like to create your own step.
