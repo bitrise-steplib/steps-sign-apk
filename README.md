@@ -1,6 +1,8 @@
-# Android Sign ![Bitrise Build Status](https://app.bitrise.io/app/3b968e65d584db2a.svg?token=Yk1LUEjLZtIjeIW4OOZvKw&branch=master) [![Bitrise Step Version](https://shields.io/github/v/release/bitrise-steplib/steps-sign-apk?include_prereleases)](https://www.bitrise.io/integrations/steps/sign-apk) [![GitHub License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://raw.githubusercontent.com/bitrise-steplib/steps-go-list/master/LICENSE) [![Bitrise Community](https://img.shields.io/badge/community-Bitrise%20Discuss-lightgrey)](https://discuss.bitrise.io/)
+# Android Sign ![Bitrise Build Status](https://app.bitrise.io/app/3b968e65d584db2a.svg?token=Yk1LUEjLZtIjeIW4OOZvKw&branch=master) [![Bitrise Step Version](https://shields.io/github/v/release/bitrise-steplib/steps-sign-apk?include_prereleases)](https://github.com/bitrise-steplib/steps-sign-apk/releases) ![GitHub License](https://img.shields.io/badge/license-MIT-lightgrey.svg) [![Bitrise Community](https://img.shields.io/badge/community-Bitrise%20Discuss-lightgrey)](https://discuss.bitrise.io/)
 
 Signs your APK or Android App Bundle to be uploaded to the Google Play Store.
+
+Check Bitrise for a [detailed description](https://www.bitrise.io/integrations/steps/sign-apk).
 
 ## Examples
 
@@ -101,7 +103,7 @@ For pull requests, work on your changes in a forked repository and use the bitri
 ## Development environment
 
 1. First, create *.bitrise.secrets.yml* with the contents below and fill out the blanks.
-For testing purposes you can create a new keystore and use it all of the four cases covered.
+For testing purposes create a new keystore and use it in all of the covered cases.
 
 ```
 envs:
@@ -116,12 +118,12 @@ envs:
 - ANDROID_SIGN_DIFF_PASS_KEYSTORE_PASSWORD: 
 - ANDROID_SIGN_DIFF_PASS_KEYSTORE_ALIAS: 
 - ANDROID_SIGN_DIFF_PASS_KEYSTORE_PRIVATE_KEY_PASSWORD: 
-## Default alias ('mykey')
+## Keystore with default alias ('mykey')
 - ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_URL: 
 - ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_PASSWORD: 
 - ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_ALIAS: 
 - ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_PRIVATE_KEY_PASSWORD: 
-## Android Studio generated keystore
+## Android Studio generated keystore (.jks)
 - ANDROID_SIGN_STUDIO_GEN_KEYSTORE_URL: 
 - ANDROID_SIGN_STUDIO_GEN_KEYSTORE_PASSWORD: 
 - ANDROID_SIGN_STUDIO_GEN_KEYSTORE_ALIAS: 
