@@ -4,7 +4,7 @@ Signs your APK or Android App Bundle before uploading it to Google Play Store.
 
 Once you have uploaded your keystore file and provided your keystore credentials on the **Code Signing** tab of the Workflow Editor, the **Android Sign** Step signs your APK digitally. 
 Bitrise assigns Environment Variables to the uploaded file and credentials, and uses those in the respective fields of the **Android Sign** Step. 
-Once the Step runs, it produces a signed APK or App Bundle which will be used as the input value of the **App file path** field in the **Google Play Deploy** Step.   
+Once the Step runs, it produces a signed APK or App Bundle which will be used as the input value of the **App file path** field in the **Google Play Deploy** Step.    blabla
 
 ### Configuring the Step
 
