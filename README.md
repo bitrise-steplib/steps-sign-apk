@@ -31,8 +31,9 @@ If you wish to get your Android project signed automatically, use the **Android 
 
 ## Examples
 
-### Build a bundle and sign it
+### Building a bundle and signing it
 
+1. Build an Android App Bundle:
 ```
 ---
 format_version: '8'
@@ -80,11 +81,13 @@ workflows:
         - variant: $VARIANT
         - build_type: aab
 ```
+2. Sign the App Bundle:
 ```yml
     - sign-apk:
         inputs:
         - use_apk_signer: true
 ```
+3. Deploy the signed App Bundle to Bitrise:
 ```
     - deploy-to-bitrise-io: {}
 ```
