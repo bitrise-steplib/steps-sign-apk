@@ -1,14 +1,39 @@
 # Android Sign ![Bitrise Build Status](https://app.bitrise.io/app/3b968e65d584db2a.svg?token=Yk1LUEjLZtIjeIW4OOZvKw&branch=master) [![Bitrise Step Version](https://shields.io/github/v/release/bitrise-steplib/steps-sign-apk?include_prereleases)](https://github.com/bitrise-steplib/steps-sign-apk/releases) ![GitHub License](https://img.shields.io/badge/license-MIT-lightgrey.svg) [![Bitrise Community](https://img.shields.io/badge/community-Bitrise%20Discuss-lightgrey)](https://discuss.bitrise.io/)
 
-Signs your APK or Android App Bundle to be uploaded to the Google Play Store.
+Signs your APK or Android App Bundle before uploading it to Google Play Store.
 
-Check Bitrise for a [detailed description](https://www.bitrise.io/integrations/steps/sign-apk).
+Once you have uploaded your keystore file and provided your keystore credentials on the **Code Signing** tab of the Workflow Editor, the **Android Sign** Step signs your APK digitally. 
+Bitrise assigns Environment Variables to the uploaded file and credentials, and uses those in the respective fields of the **Android Sign** Step. 
+Once the Step runs, it produces a signed APK or App Bundle which will be used as the input value of the **App file path** field in the **Google Play Deploy** Step.   
+
+### Configuring the Step
+
+1. Add the **Android Sign** Step after a build Step in your deploy workflow.
+2. Upload the keystore file to the **Upload file** field on the **Code Signing** tab.
+3. Provide your keystore password, keystore alias and private key password to the relevant fields on the **Code Signing** tab.
+4. Run your build.
+
+
+### Troubleshooting
+Make sure you have the **Android Sign** Step right after a build Steps but before **Deploy to Google Play** Step in your deploy workflow.
+If you wish to get your Android project signed automatically, use the **Android Sign** Step and do not set any gradle task for the signing, otherwise, the Step will fail.
+
+
+### Useful links
+- [Android code signing using Android Sign Step](https://devcenter.bitrise.io/code-signing/android-code-signing/android-code-signing-using-bitrise-sign-apk-step/)
+- [Android deployment](https://devcenter.bitrise.io/deploy/android-deploy/android-deployment-index/)
+
+
+### Related Steps
+- [Android Build](https://www.bitrise.io/integrations/steps/android-build)
+- [Gradle Runner](https://www.bitrise.io/integrations/steps/gradle-runner)
+- [Deploy to Bitrise.io](https://www.bitrise.io/integrations/steps/deploy-to-bitrise-io)
 
 ## Examples
 
 ### Build a bundle and sign it
 
-```yml
+```
 ---
 format_version: '8'
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
@@ -48,19 +73,19 @@ workflows:
     - install-missing-android-tools:
         inputs:
         - gradlew_path: $PROJECT_LOCATION/gradlew
-    - change-android-versioncode-and-versionname:
-          run_if: $.IsCI
-          inputs:
-          - build_gradle_path: $PROJECT_LOCATION/$MODULE/build.gradle
     - android-build:
         inputs:
         - project_location: $PROJECT_LOCATION
         - module: $MODULE
         - variant: $VARIANT
         - build_type: aab
+```
+```yml
     - sign-apk:
         inputs:
         - use_apk_signer: true
+```
+```
     - deploy-to-bitrise-io: {}
 ```
 
@@ -99,48 +124,6 @@ workflows:
 We welcome [pull requests](https://github.com/bitrise-steplib/steps-sign-apk/pulls) and [issues](https://github.com/bitrise-steplib/steps-sign-apk/issues) against this repository. 
 
 For pull requests, work on your changes in a forked repository and use the bitrise cli to [run your tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
-
-## Development environment
-
-1. First, create *.bitrise.secrets.yml* with the contents below and fill out the blanks.
-For testing purposes create a new keystore and use it in all of the covered cases.
-
-```
-envs:
-# CI workflow
-## Keystore password == key password
-- ANDROID_SIGN_SAME_PASS_KEYSTORE_URL: file:///path/testme
-- ANDROID_SIGN_SAME_PASS_KEYSTORE_PASSWORD: pass
-- ANDROID_SIGN_SAME_PASS_KEYSTORE_ALIAS: alias
-- ANDROID_SIGN_SAME_PASS_KEYSTORE_PRIVATE_KEY_PASSWORD: 
-## Keystore password != key password
-- ANDROID_SIGN_DIFF_PASS_KEYSTORE_URL: 
-- ANDROID_SIGN_DIFF_PASS_KEYSTORE_PASSWORD: 
-- ANDROID_SIGN_DIFF_PASS_KEYSTORE_ALIAS: 
-- ANDROID_SIGN_DIFF_PASS_KEYSTORE_PRIVATE_KEY_PASSWORD: 
-## Keystore with default alias ('mykey')
-- ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_URL: 
-- ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_PASSWORD: 
-- ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_ALIAS: 
-- ANDROID_SIGN_DEFAULT_ALIAS_KEYSTORE_PRIVATE_KEY_PASSWORD: 
-## Android Studio generated keystore (.jks)
-- ANDROID_SIGN_STUDIO_GEN_KEYSTORE_URL: 
-- ANDROID_SIGN_STUDIO_GEN_KEYSTORE_PASSWORD: 
-- ANDROID_SIGN_STUDIO_GEN_KEYSTORE_ALIAS: 
-- ANDROID_SIGN_STUDIO_GEN_KEYSTORE_PRIVATE_KEY_PASSWORD: 
-
-# Debug workflow
-- BITRISE_APK_PATH: 
-- BITRISEIO_ANDROID_KEYSTORE_URL: 
-- BITRISEIO_ANDROID_KEYSTORE_PASSWORD: 
-- BITRISEIO_ANDROID_KEYSTORE_ALIAS: 
-- BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: 
-```
-
-2. Run tests using:
-- `bitrise run ci`    to run linters, Golang tests and end-to-end integration tests
-- `bitrise run test`  to run e2e integration tests only
-- `bitirse run debug` to check the Step in a specific workflow during development
 
 ### Creating your own steps
 
