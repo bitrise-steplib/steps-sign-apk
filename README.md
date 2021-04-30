@@ -44,7 +44,7 @@ workflows:
     - PROJECT_LOCATION: .
     - MODULE:
     - VARIANT: release
-    # If the Android keystore is configured in the workflow editor, BITRISEIO_ANDROID* envs will be set automatically
+    # If the Android keystore is configured in the workflow editor, BITRISEIO_ANDROID_KEYSTORE* envs will be set automatically
     - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
     - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
     - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
