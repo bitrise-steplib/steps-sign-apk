@@ -12,6 +12,7 @@ import (
 )
 
 func Test_parseAPKextractNativeLibs(t *testing.T) {
+	t.Fatalf("test failed example only")
 	tmpDir, err := ioutil.TempDir("", "")
 	if err != nil {
 		t.Fatalf("setup: failed to create temp dir, error: %s", err)
