@@ -3,9 +3,9 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-io/sample-apps-android-abi-split.git
-  - BRANCH: master
-  - GRADLEW_PATH: "./gradlew"
+  - TEST_APP_REPO: https://github.com/bitrise-io/sample-apps-android-abi-split.git
+  - TEST_APP_BRANCH: master
+  - TEST_APP_GRADLE_WRAPPER_PATH: ./gradlew
   # define these in your .bitrise.secrets.yml
   # Keystore password == key password
   - SAME_PASS_ANDROID_KEYSTORE_URL: $SAME_PASS_ANDROID_KEYSTORE_URL
@@ -31,7 +31,7 @@ app:
 workflows:
   test_apk:
     envs:
-    - GRADLE_TASK: assembleRelease
+    - TEST_APP_GRADLE_TASK: assembleRelease
     - APK_FILE_INCLUDE_FILTER: "*.apk"
     before_run:
     - _select_java_11
@@ -43,7 +43,7 @@ workflows:
   # Using apksigner zipalign fails to zipalign already zipaligned artifact
   test_apk_debug:
     envs:
-    - GRADLE_TASK: assembleDebug
+    - TEST_APP_GRADLE_TASK: assembleDebug
     - APK_FILE_INCLUDE_FILTER: "*.apk"
     before_run:
     - _select_java_11
@@ -54,7 +54,7 @@ workflows:
     
   test_bundle:
     envs:
-    - GRADLE_TASK: bundleRelease
+    - TEST_APP_GRADLE_TASK: bundleRelease
     - APK_FILE_INCLUDE_FILTER: "*.aab"
     before_run:
     - _select_java_11
@@ -216,11 +216,11 @@ workflows:
         inputs:
         - path: ./_tmp
         - is_create_path: true
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
+    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
-          - repository_url: $SAMPLE_APP_REPOSITORY_URL
+          - repository_url: $TEST_APP_REPO
           - clone_into_dir: .
-          - branch: $BRANCH
+          - branch: $TEST_APP_BRANCH
     - install-missing-android-tools:
         inputs:
         - ndk_revision: '16'
@@ -234,8 +234,8 @@ workflows:
             envman unset --key BITRISE_AAB_PATH
     - gradle-runner:
         inputs:
-        - gradle_task: "$GRADLE_TASK"
-        - gradlew_path: "$GRADLEW_PATH"
+        - gradle_task: $TEST_APP_GRADLE_TASK
+        - gradlew_path: $TEST_APP_GRADLE_WRAPPER_PATH
         - app_file_include_filter: $APK_FILE_INCLUDE_FILTER
     - script:
         inputs:

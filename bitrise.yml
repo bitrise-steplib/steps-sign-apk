@@ -1,10 +1,6 @@
 format_version: 11
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
-app:
-  envs:
-  - GRADLEW_PATH: "./gradlew"
-
 workflows:
   check:
     steps:
@@ -12,6 +8,9 @@ workflows:
 
   sample:
     envs:
+    - TEST_ARTIFACT_REPO_URL: https://github.com/bitrise-io/sample-artifacts.git # Remote or local URL
+    - TEST_ARTIFACT_REPO_BRANCH: master
+    - TEST_ARTIFACT_REPO_REL_PATH: apks/app-debug.apk
     # Define these envs in .bitrise.secrets.yml
     - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
     - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
@@ -24,25 +23,21 @@ workflows:
             #!/usr/bin/env bash
             set -ex
             rm -rf ./_tmp
-    - change-workdir:
-        title: Switch working dir to test/_tmp dir
+    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
-        - path: ./_tmp
-        - is_create_path: true
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
-        inputs:
-          - repository_url: https://github.com/bitrise-io/sample-artifacts.git
-          - clone_into_dir: .
-          - branch: master
+          - repository_url: $TEST_ARTIFACT_REPO_URL
+          - branch: $TEST_ARTIFACT_REPO_BRANCH
+          - clone_into_dir: ./_tmp
     - script:
         inputs:
         - content: |-
             #!/usr/bin/env bash
             set -ex
-            envman add --key BITRISE_APK_PATH --value ./apks/app-debug.apk
+            envman add --key TEST_ARTIFACT --value ./_tmp/$TEST_ARTIFACT_REPO_REL_PATH
     - path::./:
         title: Debug sign-apk Step
         inputs:
+        - android_app: $TEST_ARTIFACT
         - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_URL
         - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
         - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
