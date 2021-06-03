@@ -223,6 +223,7 @@ workflows:
           - branch: $TEST_APP_BRANCH
     - install-missing-android-tools:
         inputs:
+        - gradlew_path: $TEST_APP_GRADLE_WRAPPER_PATH
         - ndk_revision: '16'
         run_if: ".IsCI"
     - script:
