@@ -46,6 +46,6 @@ workflows:
 
   e2e:
     steps:
-    - git::https://github.com/bitrise-steplib/steps-check.git@STEP-886-move-e2e-runner:
+    - git::https://github.com/bitrise-steplib/steps-check.git:
         inputs:
         - workflow: e2e
