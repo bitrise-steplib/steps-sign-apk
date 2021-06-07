@@ -33,10 +33,9 @@ workflows:
     envs:
     - TEST_APP_GRADLE_TASK: assembleRelease
     - APK_FILE_INCLUDE_FILTER: "*.apk"
-    before_run:
+    after_run:
     - _select_java_11
     - utility_create_build_artifact
-    after_run:
     - _jarsigner
     - _apksigner
 
@@ -45,10 +44,9 @@ workflows:
     envs:
     - TEST_APP_GRADLE_TASK: assembleDebug
     - APK_FILE_INCLUDE_FILTER: "*.apk"
-    before_run:
+    after_run:
     - _select_java_11
     - utility_create_build_artifact
-    after_run:
     - _jarsigner
     - _apksigner
     
@@ -56,10 +54,9 @@ workflows:
     envs:
     - TEST_APP_GRADLE_TASK: bundleRelease
     - APK_FILE_INCLUDE_FILTER: "*.aab"
-    before_run:
+    after_run:
     - _select_java_11
     - utility_create_build_artifact
-    after_run:
     - _jarsigner
     - _apksigner
 

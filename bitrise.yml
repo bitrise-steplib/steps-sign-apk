@@ -43,3 +43,9 @@ workflows:
         - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
         - use_apk_signer: true
+
+  e2e:
+    steps:
+    - git::https://github.com/bitrise-steplib/steps-check.git@STEP-886-move-e2e-runner:
+        inputs:
+        - workflow: e2e
