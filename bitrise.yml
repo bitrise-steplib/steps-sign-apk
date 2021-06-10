@@ -1,10 +1,23 @@
-format_version: 11
+format_version: "11"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 workflows:
   check:
     steps:
     - git::https://github.com/bitrise-steplib/steps-check.git: {}
+
+  e2e:
+    steps:
+      - git::https://github.com/bitrise-steplib/steps-check.git:
+          inputs:
+            - workflow: e2e
+
+  ci:
+    after_run:
+      - check
+      - e2e
+
+  test: { }
 
   sample:
     envs:
@@ -43,9 +56,3 @@ workflows:
         - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
         - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
         - use_apk_signer: true
-
-  e2e:
-    steps:
-    - git::https://github.com/bitrise-steplib/steps-check.git:
-        inputs:
-        - workflow: e2e
