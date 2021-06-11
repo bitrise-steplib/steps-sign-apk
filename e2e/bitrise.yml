@@ -1,0 +1,225 @@
+format_version: "11"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+app:
+  envs:
+    - TEST_APP_REPO: https://github.com/bitrise-io/sample-apps-android-abi-split.git
+    - TEST_APP_BRANCH: master
+    - TEST_APP_GRADLE_WRAPPER_PATH: ./gradlew
+    # define these in your .bitrise.secrets.yml
+    # Keystore password == key password
+    - SAME_PASS_ANDROID_KEYSTORE_URL: $SAME_PASS_ANDROID_KEYSTORE_URL
+    - SAME_PASS_ANDROID_KEYSTORE_PASSWORD: $SAME_PASS_ANDROID_KEYSTORE_PASSWORD
+    - SAME_PASS_ANDROID_KEY_ALIAS: $SAME_PASS_ANDROID_KEY_ALIAS
+    - SAME_PASS_ANDROID_KEY_PASSWORD: $SAME_PASS_ANDROID_KEY_PASSWORD
+    # Keystore password != key password
+    - DIFF_PASS_ANDROID_KEYSTORE_URL: $DIFF_PASS_ANDROID_KEYSTORE_URL
+    - DIFF_PASS_ANDROID_KEYSTORE_PASSWORD: $DIFF_PASS_ANDROID_KEYSTORE_PASSWORD
+    - DIFF_PASS_ANDROID_KEY_ALIAS: $DIFF_PASS_ANDROID_KEY_ALIAS
+    - DIFF_PASS_ANDROID_KEY_PASSWORD: $DIFF_PASS_ANDROID_KEY_PASSWORD
+    # Default alias ('mykey')
+    - DEFAULT_ALIAS_ANDROID_KEYSTORE_URL: $DEFAULT_ALIAS_ANDROID_KEYSTORE_URL
+    - DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD
+    - DEFAULT_ALIAS_ANDROID_KEY_ALIAS: $DEFAULT_ALIAS_ANDROID_KEY_ALIAS
+    - DEFAULT_ALIAS_ANDROID_KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
+    # Android Studio generated keystore
+    - STUDIO_GEN_ANDROID_KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
+    - STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
+    - STUDIO_GEN_ANDROID_KEY_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
+    - STUDIO_GEN_ANDROID_KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
+
+workflows:
+  test_apk:
+    envs:
+      - TEST_APP_GRADLE_TASK: assembleRelease
+      - APK_FILE_INCLUDE_FILTER: "*.apk"
+    after_run:
+      - _run_collection
+
+  # Using apksigner zipalign fails to zipalign already zipaligned artifact
+  test_apk_debug:
+    envs:
+      - TEST_APP_GRADLE_TASK: assembleDebug
+      - APK_FILE_INCLUDE_FILTER: "*.apk"
+    after_run:
+      - _run_collection
+
+  test_bundle:
+    envs:
+      - TEST_APP_GRADLE_TASK: bundleRelease
+      - APK_FILE_INCLUDE_FILTER: "*.aab"
+    after_run:
+      - _run_collection
+
+  utility_test_same_pass:
+    title: Step Test - keystore pass == key pass
+    envs:
+      - KEYSTORE_URL: $SAME_PASS_ANDROID_KEYSTORE_URL
+      - KEYSTORE_PASSWORD: $SAME_PASS_ANDROID_KEYSTORE_PASSWORD
+      - KEYSTORE_ALIAS: $SAME_PASS_ANDROID_KEY_ALIAS
+      - KEY_PASSWORD: $SAME_PASS_ANDROID_KEY_PASSWORD
+    after_run:
+      - _run
+
+  utility_test_diff_pass:
+    title: Step Test - keystore pass != key pass
+    envs:
+      - KEYSTORE_URL: $DIFF_PASS_ANDROID_KEYSTORE_URL
+      - KEYSTORE_PASSWORD: $DIFF_PASS_ANDROID_KEYSTORE_PASSWORD
+      - KEYSTORE_ALIAS: $DIFF_PASS_ANDROID_KEY_ALIAS
+      - KEY_PASSWORD: $DIFF_PASS_ANDROID_KEY_PASSWORD
+    after_run:
+      - _run
+
+  utility_test_default_alias:
+    title: Step Test - default alias
+    envs:
+      - KEYSTORE_URL: $DEFAULT_ALIAS_ANDROID_KEYSTORE_URL
+      - KEYSTORE_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD
+      - KEYSTORE_ALIAS: $DEFAULT_ALIAS_ANDROID_KEY_ALIAS
+      - KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
+    after_run:
+      - _run
+
+  utility_test_studio_gen_keystore:
+    title: Step Test - android studio generated keystore (jks)
+    envs:
+      - KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
+      - KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
+      - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
+      - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
+    after_run:
+      - _run
+
+  utility_test_custom_artifact_name:
+    title: Step Test - android studio generated keystore (jks) + custom artifact name
+    envs:
+      - KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
+      - KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
+      - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
+      - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
+      - OUTPUT_NAME: "test-artifact-name"
+    after_run:
+      - _run
+      - utility_test_custom_artifact_name_again
+
+  utility_test_custom_artifact_name_again:
+    title: Step Test - android studio generated keystore (jks) + custom artifact name second time to see collisions if any
+    envs:
+      - KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
+      - KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
+      - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
+      - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
+      - OUTPUT_NAME: "test-artifact-name"
+    after_run:
+      - _run
+
+  _run:
+    steps:
+      - script:
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -ex
+                if [ -n "$ORIG_BITRISE_APK_PATH" ]; then
+                  envman add --key BITRISE_APK_PATH --value ${ORIG_BITRISE_APK_PATH}
+                fi
+      - path::./:
+          title: Step Test - android studio generated keystore (jks) + custom artifact name
+          inputs:
+            - keystore_url: $KEYSTORE_URL
+            - keystore_password: $KEYSTORE_PASSWORD
+            - keystore_alias: $KEYSTORE_ALIAS
+            - private_key_password: $KEY_PASSWORD
+            - output_name: $OUTPUT_NAME
+            - use_apk_signer: $APK_SIGNER
+
+  _run_collection:
+    steps:
+      - script:
+          run_if: $.IsCI
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -ex
+                if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+                  sudo update-alternatives --set javac /usr/lib/jvm/java-11-openjdk-amd64/bin/javac
+                  sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
+                  export JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
+                  envman add --key JAVA_HOME --value "/usr/lib/jvm/java-11-openjdk-amd64"
+                elif [[ "$OSTYPE" == "darwin"* ]]; then
+                  jenv global 11
+                  export JAVA_HOME="$(jenv prefix)"
+                  envman add --key JAVA_HOME --value "$(jenv prefix)"
+                fi
+      - script:
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -ex
+                rm -rf ./_tmp
+      - change-workdir:
+          title: Switch working dir to test/_tmp dir
+          inputs:
+            - path: ./_tmp
+            - is_create_path: true
+      - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
+          inputs:
+            - repository_url: $TEST_APP_REPO
+            - clone_into_dir: .
+            - branch: $TEST_APP_BRANCH
+      - install-missing-android-tools:
+          inputs:
+            - gradlew_path: $TEST_APP_GRADLE_WRAPPER_PATH
+            - ndk_revision: '16'
+          run_if: ".IsCI"
+      - script:
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -ex
+                envman unset --key BITRISE_APK_PATH
+                envman unset --key BITRISE_AAB_PATH
+      - gradle-runner:
+          inputs:
+            - gradle_task: $TEST_APP_GRADLE_TASK
+            - gradlew_path: $TEST_APP_GRADLE_WRAPPER_PATH
+            - app_file_include_filter: $APK_FILE_INCLUDE_FILTER
+      - script:
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -ex
+                if [ -n "$BITRISE_APK_PATH" ]; then
+                  envman add --key ORIG_BITRISE_APK_PATH --value ${BITRISE_APK_PATH}
+                fi
+    after_run:
+      - _jarsigner_all_tests
+      - _apksigner_all_tests
+  _jarsigner_all_tests:
+    steps:
+      - script:
+          inputs:
+            - content: |-
+                echo "jarsigner"
+                envman add --key APK_SIGNER --value "false"
+    after_run:
+      - _all_keystore_tests
+
+  _apksigner_all_tests:
+    steps:
+      - script:
+          inputs:
+            - content: |-
+                echo "apksigner"
+                envman add --key APK_SIGNER --value "true"
+    after_run:
+      - _all_keystore_tests
+
+  _all_keystore_tests:
+    after_run:
+      - utility_test_same_pass
+      - utility_test_diff_pass
+      - utility_test_default_alias
+      - utility_test_studio_gen_keystore
+      - utility_test_custom_artifact_name
