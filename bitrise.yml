@@ -12,13 +12,6 @@ workflows:
           inputs:
             - workflow: e2e
 
-  ci:
-    after_run:
-      - check
-      - e2e
-
-  test: { }
-
   sample:
     envs:
     - TEST_ARTIFACT_REPO_URL: https://github.com/bitrise-io/sample-artifacts.git # Remote or local URL
