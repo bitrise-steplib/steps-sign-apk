@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -156,8 +155,8 @@ func filterSigningFiles(fileList []string) []string {
 	return signingFiles
 }
 
-func removeFilesFromBuildArtifact(zip, pth string, files []string) error {
-	cmdSlice := append([]string{zip, "-d", pth}, files...)
+func removeFilesFromBuildArtifact(aapt, pth string, files []string) error {
+	cmdSlice := append([]string{aapt, "remove", pth}, files...)
 
 	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
 	log.Printf("=> %s", prinatableCmd)
@@ -186,7 +185,7 @@ func isBuildArtifactSigned(aapt, pth string) (bool, error) {
 	return false, nil
 }
 
-func unsignBuildArtifact(zip, aapt, pth string) error {
+func unsignBuildArtifact(aapt, pth string) error {
 	filesInBuildArtifact, err := listFilesInBuildArtifact(aapt, pth)
 	if err != nil {
 		return err
@@ -200,7 +199,7 @@ func unsignBuildArtifact(zip, aapt, pth string) error {
 		return nil
 	}
 
-	return removeFilesFromBuildArtifact(zip, pth, signingFiles)
+	return removeFilesFromBuildArtifact(aapt, pth, signingFiles)
 }
 
 func prettyBuildArtifactBasename(buildArtifactPth string) string {
@@ -308,12 +307,6 @@ func main() {
 	if err != nil {
 		failf("Failed to create keystore helper, error: %s", err)
 	}
-
-	zip, err := exec.LookPath("zip")
-	if err != nil {
-		failf("Failed to find zip path, error: %s", err)
-	}
-	log.Printf("zip: %s", zip)
 	// ---
 
 	// Sign build artifacts
@@ -344,23 +337,29 @@ func main() {
 			failf("Failed to copy build artifact, error: %s", err)
 		}
 
-		isSigned, err := isBuildArtifactSigned(aapt, unsignedBuildArtifactPth)
-		if err != nil {
-			failf("Failed to check if build artifact is signed, error: %s", err)
-		}
+		signAAB := strings.EqualFold(artifactExt, ".aab")
 
-		if isSigned {
-			log.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the build artifact...")
-			if err := unsignBuildArtifact(zip, aapt, unsignedBuildArtifactPth); err != nil {
-				failf("Failed to unsign Build Artifact, error: %s", err)
+		if signAAB || !cfg.UseAPKSigner {
+			isSigned, err := isBuildArtifactSigned(aapt, unsignedBuildArtifactPth)
+			if err != nil {
+				failf("Failed to check if build artifact is signed, error: %s", err)
 			}
-			fmt.Println()
+
+			if isSigned {
+				log.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the build artifact...")
+				if err := unsignBuildArtifact(aapt, unsignedBuildArtifactPth); err != nil {
+					failf("Failed to unsign Build Artifact, error: %s", err)
+				}
+				fmt.Println()
+			} else {
+				log.Printf("No signature file (DSA or RSA) found in META-INF, skipping build artifact unsign...")
+				fmt.Println()
+			}
 		} else {
-			log.Printf("No signature file (DSA or RSA) found in META-INF, skipping build artifact unsign...")
-			fmt.Println()
+			log.Printf("Skipping removal of existing signature as apksigner can re-sign already signed apk.")
 		}
 
-		if strings.EqualFold(artifactExt, ".aab") {
+		if signAAB {
 			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
 			signedAABPaths = append(signedAABPaths, fullPath)
 		} else if cfg.UseAPKSigner {
