@@ -69,8 +69,8 @@ inputs:
     opts:
       title: "Keystore url"
       description: |-
-        For remote keystores you can provide any download location (ex: https://URL/TO/keystore.jks).
-        For local keystores provide file path url. (ex: file://PATH/TO/keystore.jks).
+        For remote keystores you can provide any download location (`https://URL/TO/keystore.jks`).
+        For local keystores provide file path url. (`file://PATH/TO/keystore.jks`).
       is_required: true
       is_sensitive: true
   - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
@@ -107,7 +107,7 @@ inputs:
   - use_apk_signer: "false"
     opts:
       title: "Enables apksigner"
-      description: "Indicates if the signature should be done using apksigner instead of jarsigner."
+      description: "Indicates if the signature should be done using `apksigner` instead of `jarsigner`."
       is_required: true
       value_options:
       - "true"
@@ -124,10 +124,10 @@ inputs:
       description: |
         If set, enforces which Signature Scheme should be used by the project.
 
-        - `automatic`: The tool uses the values of --min-sdk-version and --max-sdk-version to decide when to apply this Signature Scheme.
-        - `v2`: Sets --v2-signing-enabled true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v2.
-        - `v3`: Sets --v3-signing-enabled true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v3.
-        - `v4`: Sets --v4-signing-enabled true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v4. This scheme produces a signature in an separate file (apk-name.apk.idsig). If true and the APK is not signed, then a v2 or v3 signature is generated based on the values of --min-sdk-version and --max-sdk-version.
+        - `automatic`: The tool uses the values of `--min-sdk-version` and `--max-sdk-version` to decide when to apply this Signature Scheme.
+        - `v2`: Sets `--v2-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v2.
+        - `v3`: Sets `--v3-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v3.
+        - `v4`: Sets `--v4-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v4. This scheme produces a signature in an separate file (apk-name.apk.idsig). If true and the APK is not signed, then a v2 or v3 signature is generated based on the values of `--min-sdk-version` and `--max-sdk-version`.
   - debuggable_permitted: true
     opts:
       title: "Enable debuggable APKs"
@@ -136,14 +136,14 @@ inputs:
       - "true"
       - "false"
       description: |
-        Whether to permit signing android:debuggable="true" APKs. Android disables some of its security protections for such apps.
+        Whether to permit signing `android:debuggable="true"` APKs. Android disables some of its security protections for such apps.
   - output_name: ""
     opts:
       title: "Artifact name"
       summary: 'Name of the produced output artifact'
       description: |
-        If is empty then the output name is "app-release-bitrise-signed".
-        Else it's the specified name. Do not add extensione here.
+        If is empty then the output name is `app-release-bitrise-signed`.
+        Else it's the specified name. Do not add the file extension here.
   - verbose_log: "false"
     opts:
       title: "Enable verbose logging?"
