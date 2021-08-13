@@ -12,6 +12,12 @@ workflows:
           inputs:
             - workflow: e2e
 
+  generate-readme:
+    steps:
+    - git::https://github.com/bitrise-steplib/steps-readme-generator.git@main:
+        inputs:
+        - example_section: docs/examples.md
+
   sample:
     envs:
     - TEST_ARTIFACT_REPO_URL: https://github.com/bitrise-io/sample-artifacts.git # Remote or local URL
