@@ -94,7 +94,7 @@ workflows:
 | Key | Description | Flags | Default |
 | --- | --- | --- | --- |
 | `android_app` | Path(s) to the build artifact file to sign (`.aab` or `.apk`).  You can provide multiple build artifact file paths separated by `\|` character.  Format examples:  - `/path/to/my/app.apk` - `/path/to/my/app1.apk\|/path/to/my/app2.apk\|/path/to/my/app3.apk`  - `/path/to/my/app.aab` - `/path/to/my/app1.aab\|/path/to/my/app2.apk\|/path/to/my/app3.aab` | required | `$BITRISE_APK_PATH\n$BITRISE_AAB_PATH` |
-| `keystore_url` | For remote keystores you can provide any download location (`https://URL/TO/keystore.jks`). For local keystores provide file path url. (`file://PATH/TO/keystore.jks`). | required, sensitive | `$BITRISEIO_ANDROID_KEYSTORE_URL` |
+| `keystore_url` | For remote keystores you can provide any download location (e.g. `https://URL/TO/keystore.jks`). For local keystores provide file path url. (e.g. `file://PATH/TO/keystore.jks`). | required, sensitive | `$BITRISEIO_ANDROID_KEYSTORE_URL` |
 | `keystore_password` |  | required, sensitive | `$BITRISEIO_ANDROID_KEYSTORE_PASSWORD` |
 | `keystore_alias` |  | required, sensitive | `$BITRISEIO_ANDROID_KEYSTORE_ALIAS` |
 | `private_key_password` | If key password equals to keystore password (not recommended), you can leave it empty. Otherwise specify the private key password.  | sensitive | `$BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD` |

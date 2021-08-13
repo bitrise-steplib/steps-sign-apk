@@ -69,8 +69,8 @@ inputs:
     opts:
       title: "Keystore url"
       description: |-
-        For remote keystores you can provide any download location (`https://URL/TO/keystore.jks`).
-        For local keystores provide file path url. (`file://PATH/TO/keystore.jks`).
+        For remote keystores you can provide any download location (e.g. `https://URL/TO/keystore.jks`).
+        For local keystores provide file path url. (e.g. `file://PATH/TO/keystore.jks`).
       is_required: true
       is_sensitive: true
   - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
