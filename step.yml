@@ -1,9 +1,9 @@
-title: "Android Sign"
+title: Android Sign
 summary: Signs your APK or Android App Bundle before uploading it to Google Play Store.
 description: |-
-  Once you have uploaded your keystore file and provided your keystore credentials on the **Code Signing** tab of the Workflow Editor, the **Android Sign** Step signs your APK digitally. 
-  Bitrise assigns Environment Variables to the uploaded file and credentials, and uses those in the respective fields of the **Android Sign** Step. 
-  Once the Step runs, it produces a signed APK or App Bundle which will be used as the input value of the **App file path** field in the **Google Play Deploy** Step.   
+  Once you have uploaded your keystore file and provided your keystore credentials on the **Code Signing** tab of the Workflow Editor, the **Android Sign** Step signs your APK digitally.
+  Bitrise assigns Environment Variables to the uploaded file and credentials, and uses those in the respective fields of the **Android Sign** Step.
+  Once the Step runs, it produces a signed APK or App Bundle which will be used as the input value of the **App file path** field in the **Google Play Deploy** Step.
 
   ### Configuring the Step
 
@@ -31,16 +31,16 @@ website: https://github.com/bitrise-steplib/steps-sign-apk
 source_code_url: https://github.com/bitrise-steplib/steps-sign-apk
 support_url: https://github.com/bitrise-steplib/steps-sign-apk/issues
 host_os_tags:
-  - osx-10.10
-  - ubuntu
+- osx-10.10
+- ubuntu
 project_type_tags:
-  - android
-  - xamarin
-  - react-native
-  - cordova
-  - ionic
+- android
+- xamarin
+- react-native
+- cordova
+- ionic
 type_tags:
-  - code-sign
+- code-sign
 is_requires_admin_user: false
 is_always_run: false
 is_skippable: false
@@ -48,173 +48,172 @@ toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-sign-apk
 inputs:
-  - android_app: "$BITRISE_APK_PATH\n$BITRISE_AAB_PATH"
-    opts:
-      title: "App file path."
-      summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`"
-      description: |-
-        Path(s) to the build artifact file to sign (`.aab` or `.apk`).
+- android_app: $BITRISE_APK_PATH\n$BITRISE_AAB_PATH
+  opts:
+    title: App file path.
+    summary: "`Android App Bundle (.aab)` or `Android Application Package (.apk)`"
+    description: |-
+      Path(s) to the build artifact file to sign (`.aab` or `.apk`).
 
-        You can provide multiple build artifact file paths separated by `|` character.
+      You can provide multiple build artifact file paths separated by `|` character.
 
-        Format examples:
+      Format examples:
 
-        - `/path/to/my/app.apk`
-        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
+      - `/path/to/my/app.apk`
+      - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
 
-        - `/path/to/my/app.aab`
-        - `/path/to/my/app1.aab|/path/to/my/app2.apk|/path/to/my/app3.aab`
-      is_required: true
-  - keystore_url: $BITRISEIO_ANDROID_KEYSTORE_URL
-    opts:
-      title: "Keystore url"
-      description: |-
-        For remote keystores you can provide any download location (e.g. `https://URL/TO/keystore.jks`).
-        For local keystores provide file path url. (e.g. `file://PATH/TO/keystore.jks`).
-      is_required: true
-      is_sensitive: true
-  - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
-    opts:
-      title: "Keystore password"
-      is_required: true
-      is_sensitive: true
-  - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
-    opts:
-      title: "Key alias"
-      is_required: true
-      is_sensitive: true
-  - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
-    opts:
-      title: "Key password"
-      description: |
-        If key password equals to keystore password (not recommended), you can leave it empty.
-        Otherwise specify the private key password.
-      is_sensitive: true
-  - page_align: "automatic"
-    opts:
-      title: "Page alignment"
-      is_required: true
-      value_options:
-      - "true"
-      - "false"
-      - "automatic"
-      description: |
-        If enabled, it tells zipalign to use memory page alignment for stored shared object files.
+      - `/path/to/my/app.aab`
+      - `/path/to/my/app1.aab|/path/to/my/app2.apk|/path/to/my/app3.aab`
+    is_required: true
+- keystore_url: $BITRISEIO_ANDROID_KEYSTORE_URL
+  opts:
+    title: Keystore url
+    description: |-
+      For remote keystores you can provide any download location (e.g. `https://URL/TO/keystore.jks`).
+      For local keystores provide file path url. (e.g. `file://PATH/TO/keystore.jks`).
+    is_required: true
+    is_sensitive: true
+- keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+  opts:
+    title: Keystore password
+    is_required: true
+    is_sensitive: true
+- keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+  opts:
+    title: Key alias
+    is_required: true
+    is_sensitive: true
+- private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+  opts:
+    title: Key password
+    description: |
+      If key password equals to keystore password (not recommended), you can leave it empty.
+      Otherwise specify the private key password.
+    is_sensitive: true
+- page_align: automatic
+  opts:
+    title: Page alignment
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
+    - automatic
+    description: |
+      If enabled, it tells zipalign to use memory page alignment for stored shared object files.
 
-        - `automatic`: Enable page alignment for .so files, unless atribute `extractNativeLibs="true"` is set in the AndroidManifest.xml
-        - `true`: Enable memory page alignment for .so files
-        - `false`: Disable memory page alignment for .so files
-  - use_apk_signer: "false"
-    opts:
-      title: "Enables apksigner"
-      description: "Indicates if the signature should be done using `apksigner` instead of `jarsigner`."
-      is_required: true
-      value_options:
-      - "true"
-      - "false"
-  - signer_scheme: "automatic"
-    opts:
-      title: "APK Signature Scheme"
-      is_required: true
-      value_options:
-      - "automatic"
-      - "v2"
-      - "v3"
-      - "v4"
-      description: |
-        If set, enforces which Signature Scheme should be used by the project.
+      - `automatic`: Enable page alignment for .so files, unless atribute `extractNativeLibs="true"` is set in the AndroidManifest.xml
+      - `true`: Enable memory page alignment for .so files
+      - `false`: Disable memory page alignment for .so files
+- use_apk_signer: "false"
+  opts:
+    title: Enables apksigner
+    description: Indicates if the signature should be done using `apksigner` instead of `jarsigner`.
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
+- signer_scheme: automatic
+  opts:
+    title: APK Signature Scheme
+    is_required: true
+    value_options:
+    - automatic
+    - v2
+    - v3
+    - v4
+    description: |
+      If set, enforces which Signature Scheme should be used by the project.
 
-        - `automatic`: The tool uses the values of `--min-sdk-version` and `--max-sdk-version` to decide when to apply this Signature Scheme.
-        - `v2`: Sets `--v2-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v2.
-        - `v3`: Sets `--v3-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v3.
-        - `v4`: Sets `--v4-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v4. This scheme produces a signature in an separate file (apk-name.apk.idsig). If true and the APK is not signed, then a v2 or v3 signature is generated based on the values of `--min-sdk-version` and `--max-sdk-version`.
-  - debuggable_permitted: true
-    opts:
-      title: "Enable debuggable APKs"
-      is_required: true
-      value_options:
-      - "true"
-      - "false"
-      description: |
-        Whether to permit signing `android:debuggable="true"` APKs. Android disables some of its security protections for such apps.
-  - output_name: ""
-    opts:
-      title: "Artifact name"
-      summary: 'Name of the produced output artifact'
-      description: |
-        If is empty then the output name is `app-release-bitrise-signed`.
-        Else it's the specified name. Do not add the file extension here.
-  - verbose_log: "false"
-    opts:
-      title: "Enable verbose logging?"
-      description: Enable verbose logging?
-      is_required: true
-      value_options:
-      - "true"
-      - "false"
-  - apk_path:
-    opts:
-      title: "[DEPRECATED] Build artifact path."
-      category: Deprecated
-      summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`. Deprecated, use `android_app` instead."
-      description: |-
-        __This input is deprecated and will be removed on 20 August 2019, use `App file path` input instead!__
+      - `automatic`: The tool uses the values of `--min-sdk-version` and `--max-sdk-version` to decide when to apply this Signature Scheme.
+      - `v2`: Sets `--v2-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v2.
+      - `v3`: Sets `--v3-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v3.
+      - `v4`: Sets `--v4-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v4. This scheme produces a signature in an separate file (apk-name.apk.idsig). If true and the APK is not signed, then a v2 or v3 signature is generated based on the values of `--min-sdk-version` and `--max-sdk-version`.
+- debuggable_permitted: true
+  opts:
+    title: Enable debuggable APKs
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
+    description: |
+      Whether to permit signing `android:debuggable="true"` APKs. Android disables some of its security protections for such apps.
+- output_name: ""
+  opts:
+    title: Artifact name
+    summary: Name of the produced output artifact
+    description: |
+      If is empty then the output name is `app-release-bitrise-signed`.
+      Else it's the specified name. Do not add the file extension here.
+- verbose_log: "false"
+  opts:
+    title: Enable verbose logging?
+    description: Enable verbose logging?
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
+- apk_path:
+  opts:
+    title: "[DEPRECATED] Build artifact path."
+    category: Deprecated
+    summary: "`Android App Bundle (.aab)` or `Android Aplication Package (.apk)`. Deprecated, use `android_app` instead."
+    description: |-
+      __This input is deprecated and will be removed on 20 August 2019, use `App file path` input instead!__
 
-        Path(s) to the build artifact file to sign (`.aab` or `.apk`).
+      Path(s) to the build artifact file to sign (`.aab` or `.apk`).
 
-        You can provide multiple build artifact file paths separated by `|` character.
+      You can provide multiple build artifact file paths separated by `|` character.
 
-        Deprecated, use `android_app` instead.
+      Deprecated, use `android_app` instead.
 
-        Format examples:
+      Format examples:
 
-        - `/path/to/my/app.apk`
-        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
+      - `/path/to/my/app.apk`
+      - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
 
-        - `/path/to/my/app.aab`
-        - `/path/to/my/app1.aab|/path/to/my/app2.apk|/path/to/my/app3.aab`
-      is_required: true
+      - `/path/to/my/app.aab`
+      - `/path/to/my/app1.aab|/path/to/my/app2.apk|/path/to/my/app3.aab`
+    is_required: true
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
-    title: "Path of the signed APK"
-    summary: "Path of the signed APK"
+    title: Path of the signed APK
+    summary: Path of the signed APK
     description: |-
       This output will include the path of the signed APK.
       If the build generates more than one APK this output will contain the last one's path.
 - BITRISE_SIGNED_APK_PATH_LIST:
   opts:
-    title: "List of the signed APK paths"
-    summary: "List of the signed (and copied) APK paths"
+    title: List of the signed APK paths
+    summary: List of the signed (and copied) APK paths
     description: |-
       This output will include the paths of the generated APKs
       If multiple APKs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.apk|app-mips-debug.apk|app-x86-debug.apk`
 - BITRISE_SIGNED_AAB_PATH:
   opts:
-    title: "Path of the signed AAB"
-    summary: "Path of the signed AAB"
+    title: Path of the signed AAB
+    summary: Path of the signed AAB
     description: |-
       This output will include the path of the signed AAB.
       If the build generates more than one AAB this output will contain the last one's path.
 - BITRISE_SIGNED_AAB_PATH_LIST:
   opts:
-    title: "List of the signed AAB paths"
-    summary: "List of the signed (and copied) AAB paths"
+    title: List of the signed AAB paths
+    summary: List of the signed (and copied) AAB paths
     description: |-
       This output will include the paths of the generated AABs.
       If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`
 - BITRISE_APK_PATH:
   opts:
-    title: "Path of the signed APK"
-    summary: "Path of the signed APK"
+    title: Path of the signed APK
+    summary: Path of the signed APK
     description: |-
-       This output will include the path(s) of the signed APK(s).
-       If multiple APKs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.apk|app-mips-debug.apk|app-x86-debug.apk`
+      This output will include the path(s) of the signed APK(s).
+      If multiple APKs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.apk|app-mips-debug.apk|app-x86-debug.apk`
 - BITRISE_AAB_PATH:
   opts:
-    title: "Path of the signed AAB"
-    summary: "Path of the signed AAB"
+    title: Path of the signed AAB
+    summary: Path of the signed AAB
     description: |-
-       This output will include the path(s) of the signed AAB(s).
-       If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`
-       
+      This output will include the path(s) of the signed AAB(s).
+      If multiple AABs are provided for signing the output paths are separated with `|` character, for example, `app-armeabi-v7a-debug.aab|app-mips-debug.aab|app-x86-debug.aab`

@@ -4,13 +4,13 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 workflows:
   check:
     steps:
-    - git::https://github.com/bitrise-steplib/steps-check.git: {}
+    - git::https://github.com/bitrise-steplib/steps-check.git: { }
 
   e2e:
     steps:
-      - git::https://github.com/bitrise-steplib/steps-check.git:
-          inputs:
-            - workflow: e2e
+    - git::https://github.com/bitrise-steplib/steps-check.git:
+        inputs:
+        - workflow: e2e
 
   generate-readme:
     steps:
@@ -20,7 +20,7 @@ workflows:
 
   sample:
     envs:
-    - TEST_ARTIFACT_REPO_URL: https://github.com/bitrise-io/sample-artifacts.git # Remote or local URL
+    - TEST_ARTIFACT_REPO_URL: https://github.com/bitrise-io/sample-artifacts.git  # Remote or local URL
     - TEST_ARTIFACT_REPO_BRANCH: master
     - TEST_ARTIFACT_REPO_REL_PATH: apks/app-debug.apk
     # Define these envs in .bitrise.secrets.yml
@@ -37,9 +37,9 @@ workflows:
             rm -rf ./_tmp
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
-          - repository_url: $TEST_ARTIFACT_REPO_URL
-          - branch: $TEST_ARTIFACT_REPO_BRANCH
-          - clone_into_dir: ./_tmp
+        - repository_url: $TEST_ARTIFACT_REPO_URL
+        - branch: $TEST_ARTIFACT_REPO_BRANCH
+        - clone_into_dir: ./_tmp
     - script:
         inputs:
         - content: |-
