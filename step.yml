@@ -128,7 +128,7 @@ inputs:
       - `v2`: Sets `--v2-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v2.
       - `v3`: Sets `--v3-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v3.
       - `v4`: Sets `--v4-signing-enabled` true, and determines whether apksigner signs the given APK package using the APK Signature Scheme v4. This scheme produces a signature in an separate file (apk-name.apk.idsig). If true and the APK is not signed, then a v2 or v3 signature is generated based on the values of `--min-sdk-version` and `--max-sdk-version`.
-- debuggable_permitted: true
+- debuggable_permitted: "true"
   opts:
     title: Enable debuggable APKs
     is_required: true
