@@ -240,7 +240,7 @@ func validate(cfg configs) error {
 func main() {
 	var cfg configs
 	if err := stepconf.Parse(&cfg); err != nil {
-		failf("process config: failed to parse input: %s", err)
+		failf("Process config: failed to parse input: %s", err)
 	}
 	pageAlignConfig := parsePageAlign(cfg.PageAlign)
 
@@ -250,13 +250,13 @@ func main() {
 	fmt.Println()
 
 	if err := validate(cfg); err != nil {
-		failf("process config: failed to validate input: %s", err)
+		failf("Process config: failed to validate input: %s", err)
 	}
 
 	// Download keystore
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
 	if err != nil {
-		failf("run: failed to create tmp dir: %s", err)
+		failf("Run: failed to create tmp dir: %s", err)
 	}
 
 	keystorePath := ""
@@ -265,20 +265,20 @@ func main() {
 		var err error
 		keystorePath, err = pathutil.AbsPath(pth)
 		if err != nil {
-			failf("run: failed to expand path (%s): %s", pth, err)
+			failf("Run: failed to expand path (%s): %s", pth, err)
 		}
 	} else {
 		log.Infof("Download keystore")
 		keystorePath = path.Join(tmpDir, "keystore.jks")
 		if err := download(cfg.KeystoreURL, keystorePath); err != nil {
-			failf("run: failed to download keystore: %s", err)
+			failf("Run: failed to download keystore: %s", err)
 		}
 	}
 	log.Printf("using keystore at: %s", keystorePath)
 
 	keystore, err := keystore.NewHelper(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias)
 	if err != nil {
-		failf("run: failed to create keystore helper: %s", err)
+		failf("Run: failed to create keystore helper: %s", err)
 	}
 	// ---
 
@@ -288,24 +288,24 @@ func main() {
 
 	androidSDK, err := sdk.New(androidHome)
 	if err != nil {
-		failf("run: failed to create SDK model: %s", err)
+		failf("Run: failed to create SDK model: %s", err)
 	}
 
 	aapt, err := androidSDK.LatestBuildToolPath("aapt")
 	if err != nil {
-		failf("run: failed to find AAPT path: %s", err)
+		failf("Run: failed to find AAPT path: %s", err)
 	}
 	log.Printf("aapt: %s", aapt)
 
 	zipalign, err := androidSDK.LatestBuildToolPath("zipalign")
 	if err != nil {
-		failf("run: failed to find zipalign path: %s", err)
+		failf("Run: failed to find zipalign path: %s", err)
 	}
 	log.Printf("zipalign: %s", zipalign)
 
 	apkSigner, err := NewKeystoreSignatureConfiguration(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias, cfg.PrivateKeyPassword, cfg.DebuggablePermitted, cfg.SignerScheme)
 	if err != nil {
-		failf("run: failed to create signature configuration: %s", err)
+		failf("Run: failed to create signature configuration: %s", err)
 	}
 	// ---
 
@@ -334,7 +334,7 @@ func main() {
 		// unsign build artifact
 		unsignedBuildArtifactPth := filepath.Join(tmpDir, "unsigned"+artifactExt)
 		if err := command.CopyFile(buildArtifactPath, unsignedBuildArtifactPth); err != nil {
-			failf("run: failed to copy build artifact: %s", err)
+			failf("Run: failed to copy build artifact: %s", err)
 		}
 
 		signAAB := strings.EqualFold(artifactExt, ".aab")
@@ -342,13 +342,13 @@ func main() {
 		if signAAB || !cfg.UseAPKSigner {
 			isSigned, err := isBuildArtifactSigned(aapt, unsignedBuildArtifactPth)
 			if err != nil {
-				failf("run: failed to check if build artifact is signed: %s", err)
+				failf("Run: failed to check if build artifact is signed: %s", err)
 			}
 
 			if isSigned {
 				log.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the build artifact...")
 				if err := unsignBuildArtifact(aapt, unsignedBuildArtifactPth); err != nil {
-					failf("run: failed to un-sign Build Artifact: %s", err)
+					failf("Run: failed to un-sign Build Artifact: %s", err)
 				}
 				fmt.Println()
 			} else {
@@ -399,19 +399,19 @@ func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, bui
 	unalignedBuildArtifactPth := filepath.Join(tmpDir, "unaligned"+artifactExt)
 	log.Infof("Sign Build Artifact with Jarsigner: %s", unsignedBuildArtifactPth)
 	if err := keystore.SignBuildArtifact(unsignedBuildArtifactPth, unalignedBuildArtifactPth, privateKeyPassword); err != nil {
-		failf("run: failed to sign Build Artifact: %s", err)
+		failf("Run: failed to sign Build Artifact: %s", err)
 	}
 	fmt.Println()
 
 	log.Infof("Verify Build Artifact")
 	if err := keystore.VerifyBuildArtifact(unalignedBuildArtifactPth); err != nil {
-		failf("run: failed to verify Build Artifact: %s", err)
+		failf("Run: failed to verify Build Artifact: %s", err)
 	}
 	fmt.Println()
 
 	fullPath, err := zipAlignArtifact(zipalign, unalignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "signed", outputName, pageAlignConfig)
 	if err != nil {
-		failf("run: failed to zipalign Build Artifact: %s", err)
+		failf("Run: failed to zipalign Build Artifact: %s", err)
 	}
 
 	return fullPath
@@ -420,7 +420,7 @@ func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, bui
 func signAPK(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, outputName string, apkSigner SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
 	alignedPath, err := zipAlignArtifact(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "aligned", "", pageAlignConfig)
 	if err != nil {
-		failf("run: failed to zipalign Build Artifact: %s", err)
+		failf("Run: failed to zipalign Build Artifact: %s", err)
 	}
 
 	signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
@@ -434,14 +434,14 @@ func signAPK(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifact
 	log.Infof("Sign Build Artifact with APKSigner: %s", alignedPath)
 	err = apkSigner.SignBuildArtifact(alignedPath, fullPath)
 	if err != nil {
-		failf("run: failed to build artifact: %s", err)
+		failf("Run: failed to build artifact: %s", err)
 	}
 
 	fmt.Println()
 	log.Infof("Verify Build Artifact")
 	err = apkSigner.VerifyBuildArtifact(fullPath)
 	if err != nil {
-		failf("run: failed to build artifact: %s", err)
+		failf("Run: failed to build artifact: %s", err)
 	}
 
 	return fullPath
