@@ -12,16 +12,13 @@ description: |-
   3. Provide your keystore password, keystore alias and private key password to the relevant fields on the **Code Signing** tab.
   4. Run your build.
 
-
   ### Troubleshooting
   Make sure you have the **Android Sign** Step right after a build Steps but before **Deploy to Google Play** Step in your deploy workflow.
   If you wish to get your Android project signed automatically, use the **Android Sign** Step and do not set any gradle task for the signing, otherwise, the Step will fail.
 
-
   ### Useful links
   - [Android code signing using Android Sign Step](https://devcenter.bitrise.io/code-signing/android-code-signing/android-code-signing-using-bitrise-sign-apk-step/)
   - [Android deployment](https://devcenter.bitrise.io/deploy/android-deploy/android-deployment-index/)
-
 
   ### Related Steps
   - [Android Build](https://www.bitrise.io/integrations/steps/android-build)
