@@ -170,7 +170,6 @@ inputs:
 
       - `/path/to/my/app.aab`
       - `/path/to/my/app1.aab|/path/to/my/app2.apk|/path/to/my/app3.aab`
-    is_required: true
 outputs:
 - BITRISE_SIGNED_APK_PATH:
   opts:
