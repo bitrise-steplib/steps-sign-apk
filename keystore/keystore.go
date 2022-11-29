@@ -116,8 +116,8 @@ func (helper Helper) createSignCmd(buildArtifactPth, destBuildArtifactPth, priva
 	}
 	split = strings.Split(split[1], "and")
 
-	signingAlgorithm := "SHA1with" + split[0]
-	digestAlgorithm := "SHA1"
+	signingAlgorithm := "SHA256with" + split[0]
+	digestAlgorithm := "SHA-256"
 
 	cmdSlice := []string{
 		jarsigner,
