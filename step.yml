@@ -73,11 +73,13 @@ inputs:
 - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
   opts:
     title: Keystore password
+    description: Matching password to `keystore_url`. Do not confuse this with `key_password`!
     is_required: true
     is_sensitive: true
 - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
   opts:
     title: Key alias
+    description: Alias of key inside `keystore_url`.
     is_required: true
     is_sensitive: true
 - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
