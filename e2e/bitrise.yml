@@ -116,6 +116,9 @@ workflows:
 
   _run:
     steps:
+    - set-java-version:
+        inputs:
+        - set_java_version: 17
     - script:
         inputs:
         - content: |-

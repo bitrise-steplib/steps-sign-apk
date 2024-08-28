@@ -139,8 +139,8 @@ inputs:
     title: Artifact name
     summary: Name of the produced output artifact
     description: |
-      If is empty then the output name is `app-release-bitrise-signed`.
-      Else it's the specified name. Do not add the file extension here.
+      If empty, then the output name is `app-release-bitrise-signed`.
+      Otherwise, it's the specified name. Do not add the file extension here.
 - verbose_log: "false"
   opts:
     title: Enable verbose logging?
