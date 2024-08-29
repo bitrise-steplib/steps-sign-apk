@@ -73,11 +73,13 @@ inputs:
 - keystore_password: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
   opts:
     title: Keystore password
+    description: Matching password to `keystore_url`. Do not confuse this with `key_password`!
     is_required: true
     is_sensitive: true
 - keystore_alias: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
   opts:
     title: Key alias
+    description: Alias of key inside `keystore_url`.
     is_required: true
     is_sensitive: true
 - private_key_password: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
@@ -139,8 +141,8 @@ inputs:
     title: Artifact name
     summary: Name of the produced output artifact
     description: |
-      If is empty then the output name is `app-release-bitrise-signed`.
-      Else it's the specified name. Do not add the file extension here.
+      If empty, then the output name is `app-release-bitrise-signed`.
+      Otherwise, it's the specified name. Do not add the file extension here.
 - verbose_log: "false"
   opts:
     title: Enable verbose logging?
