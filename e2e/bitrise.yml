@@ -6,6 +6,7 @@ app:
   - TEST_APP_REPO: https://github.com/bitrise-io/sample-apps-android-abi-split.git
   - TEST_APP_BRANCH: master
   - TEST_APP_GRADLE_WRAPPER_PATH: ./gradlew
+  - SIGNER_TOOL: automatic
   # define these in your .bitrise.secrets.yml
   # Keystore password == key password
   - SAME_PASS_ANDROID_KEYSTORE_URL: $SAME_PASS_ANDROID_KEYSTORE_URL
@@ -29,115 +30,29 @@ app:
   - STUDIO_GEN_ANDROID_KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
 
 workflows:
-  test_apk:
+  test_apk_signing:
     envs:
     - TEST_APP_GRADLE_TASK: assembleRelease
     - APK_FILE_INCLUDE_FILTER: "*.apk"
     after_run:
-    - _run_collection
+    - _build_app_and_sign_with_keystore_combinations
 
   # Using apksigner zipalign fails to zipalign already zipaligned artifact
-  test_apk_debug:
+  test_debug_apk_signing:
     envs:
     - TEST_APP_GRADLE_TASK: assembleDebug
     - APK_FILE_INCLUDE_FILTER: "*.apk"
     after_run:
-    - _run_collection
+    - _build_app_and_sign_with_keystore_combinations
 
-  test_bundle:
+  test_app_bundle_signing:
     envs:
     - TEST_APP_GRADLE_TASK: bundleRelease
     - APK_FILE_INCLUDE_FILTER: "*.aab"
     after_run:
-    - _run_collection
+    - _build_app_and_sign_with_keystore_combinations
 
-  utility_test_same_pass:
-    title: Step Test - keystore pass == key pass
-    envs:
-    - KEYSTORE_URL: $SAME_PASS_ANDROID_KEYSTORE_URL
-    - KEYSTORE_PASSWORD: $SAME_PASS_ANDROID_KEYSTORE_PASSWORD
-    - KEYSTORE_ALIAS: $SAME_PASS_ANDROID_KEY_ALIAS
-    - KEY_PASSWORD: $SAME_PASS_ANDROID_KEY_PASSWORD
-    after_run:
-    - _run
-
-  utility_test_diff_pass:
-    title: Step Test - keystore pass != key pass
-    envs:
-    - KEYSTORE_URL: $DIFF_PASS_ANDROID_KEYSTORE_URL
-    - KEYSTORE_PASSWORD: $DIFF_PASS_ANDROID_KEYSTORE_PASSWORD
-    - KEYSTORE_ALIAS: $DIFF_PASS_ANDROID_KEY_ALIAS
-    - KEY_PASSWORD: $DIFF_PASS_ANDROID_KEY_PASSWORD
-    after_run:
-    - _run
-
-  utility_test_default_alias:
-    title: Step Test - default alias
-    envs:
-    - KEYSTORE_URL: $DEFAULT_ALIAS_ANDROID_KEYSTORE_URL
-    - KEYSTORE_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD
-    - KEYSTORE_ALIAS: $DEFAULT_ALIAS_ANDROID_KEY_ALIAS
-    - KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
-    after_run:
-    - _run
-
-  utility_test_studio_gen_keystore:
-    title: Step Test - android studio generated keystore (jks)
-    envs:
-    - KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
-    - KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
-    - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
-    - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
-    after_run:
-    - _run
-
-  utility_test_custom_artifact_name:
-    title: Step Test - android studio generated keystore (jks) + custom artifact name
-    envs:
-    - KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
-    - KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
-    - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
-    - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
-    - OUTPUT_NAME: test-artifact-name
-    after_run:
-    - _run
-    - utility_test_custom_artifact_name_again
-
-  utility_test_custom_artifact_name_again:
-    title: Step Test - android studio generated keystore (jks) + custom artifact name second time to see collisions if any
-    envs:
-    - KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
-    - KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
-    - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
-    - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
-    - OUTPUT_NAME: test-artifact-name
-    after_run:
-    - _run
-
-  _run:
-    steps:
-    - set-java-version:
-        inputs:
-        - set_java_version: 17
-    - script:
-        inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            set -ex
-            if [ -n "$ORIG_BITRISE_APK_PATH" ]; then
-              envman add --key BITRISE_APK_PATH --value ${ORIG_BITRISE_APK_PATH}
-            fi
-    - path::./:
-        title: Step Test - android studio generated keystore (jks) + custom artifact name
-        inputs:
-        - keystore_url: $KEYSTORE_URL
-        - keystore_password: $KEYSTORE_PASSWORD
-        - keystore_alias: $KEYSTORE_ALIAS
-        - private_key_password: $KEY_PASSWORD
-        - output_name: $OUTPUT_NAME
-        - use_apk_signer: $APK_SIGNER
-
-  _run_collection:
+  _build_app_and_sign_with_keystore_combinations:
     steps:
     - set-java-version:
         inputs:
@@ -184,9 +99,10 @@ workflows:
               envman add --key ORIG_BITRISE_APK_PATH --value ${BITRISE_APK_PATH}
             fi
     after_run:
-    - _jarsigner_all_tests
-    - _apksigner_all_tests
-  _jarsigner_all_tests:
+    - _sign_with_jarsigner_with_keystore_combinations
+    - _sign_with_apksigner_with_keystore_combinations
+
+  _sign_with_jarsigner_with_keystore_combinations:
     steps:
     - script:
         inputs:
@@ -196,7 +112,7 @@ workflows:
     after_run:
     - _all_keystore_tests
 
-  _apksigner_all_tests:
+  _sign_with_apksigner_with_keystore_combinations:
     steps:
     - script:
         inputs:
@@ -208,8 +124,94 @@ workflows:
 
   _all_keystore_tests:
     after_run:
-    - utility_test_same_pass
-    - utility_test_diff_pass
-    - utility_test_default_alias
-    - utility_test_studio_gen_keystore
-    - utility_test_custom_artifact_name
+    - _sign_with_keystore_with_same_pass
+    - _sign_with_keystore_with_diff_pass
+    - _sign_with_keystore_with_default_alias
+    - _sign_with_studio_gen_keystore
+    - _sign_with_custom_artifact_name
+
+  _sign_with_keystore_with_same_pass:
+    title: Step Test - keystore pass == key pass
+    envs:
+    - KEYSTORE_URL: $SAME_PASS_ANDROID_KEYSTORE_URL
+    - KEYSTORE_PASSWORD: $SAME_PASS_ANDROID_KEYSTORE_PASSWORD
+    - KEYSTORE_ALIAS: $SAME_PASS_ANDROID_KEY_ALIAS
+    - KEY_PASSWORD: $SAME_PASS_ANDROID_KEY_PASSWORD
+    after_run:
+    - _sign_app
+
+  _sign_with_keystore_with_diff_pass:
+    title: Step Test - keystore pass != key pass
+    envs:
+    - KEYSTORE_URL: $DIFF_PASS_ANDROID_KEYSTORE_URL
+    - KEYSTORE_PASSWORD: $DIFF_PASS_ANDROID_KEYSTORE_PASSWORD
+    - KEYSTORE_ALIAS: $DIFF_PASS_ANDROID_KEY_ALIAS
+    - KEY_PASSWORD: $DIFF_PASS_ANDROID_KEY_PASSWORD
+    after_run:
+    - _sign_app
+
+  _sign_with_keystore_with_default_alias:
+    title: Step Test - default alias
+    envs:
+    - KEYSTORE_URL: $DEFAULT_ALIAS_ANDROID_KEYSTORE_URL
+    - KEYSTORE_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD
+    - KEYSTORE_ALIAS: $DEFAULT_ALIAS_ANDROID_KEY_ALIAS
+    - KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
+    after_run:
+    - _sign_app
+
+  _sign_with_studio_gen_keystore:
+    title: Step Test - android studio generated keystore (jks)
+    envs:
+    - KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
+    - KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
+    - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
+    - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
+    after_run:
+    - _sign_app
+
+  _sign_with_custom_artifact_name:
+    title: Step Test - android studio generated keystore (jks) + custom artifact name
+    envs:
+    - KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
+    - KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
+    - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
+    - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
+    - OUTPUT_NAME: test-artifact-name
+    after_run:
+    - _sign_app
+    - _sign_with_custom_artifact_name_again
+
+  _sign_with_custom_artifact_name_again:
+    title: Step Test - android studio generated keystore (jks) + custom artifact name second time to see collisions if any
+    envs:
+    - KEYSTORE_URL: $STUDIO_GEN_ANDROID_KEYSTORE_URL
+    - KEYSTORE_PASSWORD: $STUDIO_GEN_ANDROID_KEYSTORE_PASSWORD
+    - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
+    - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
+    - OUTPUT_NAME: test-artifact-name
+    after_run:
+    - _sign_app
+
+  _sign_app:
+    steps:
+    - set-java-version:
+        inputs:
+        - set_java_version: 17
+    - script:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -ex
+            if [ -n "$ORIG_BITRISE_APK_PATH" ]; then
+              envman add --key BITRISE_APK_PATH --value ${ORIG_BITRISE_APK_PATH}
+            fi
+    - path::./:
+        title: Step Test - android studio generated keystore (jks) + custom artifact name
+        inputs:
+        - keystore_url: $KEYSTORE_URL
+        - keystore_password: $KEYSTORE_PASSWORD
+        - keystore_alias: $KEYSTORE_ALIAS
+        - private_key_password: $KEY_PASSWORD
+        - output_name: $OUTPUT_NAME
+        - signer_tool: $SIGNER_TOOL
