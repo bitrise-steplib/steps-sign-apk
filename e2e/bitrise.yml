@@ -99,54 +99,39 @@ workflows:
               envman add --key ORIG_BITRISE_APK_PATH --value ${BITRISE_APK_PATH}
             fi
     after_run:
-    - _sign_with_jarsigner_with_keystore_combinations
-    - _sign_with_apksigner_with_keystore_combinations
-
-  _sign_with_jarsigner_with_keystore_combinations:
-    steps:
-    - script:
-        inputs:
-        - content: |-
-            echo "jarsigner"
-            envman add --key APK_SIGNER --value "false"
-    after_run:
-    - _all_keystore_tests
-
-  _sign_with_apksigner_with_keystore_combinations:
-    steps:
-    - script:
-        inputs:
-        - content: |-
-            echo "apksigner"
-            envman add --key APK_SIGNER --value "true"
-    after_run:
-    - _all_keystore_tests
-
-  _all_keystore_tests:
-    after_run:
-    - _sign_with_keystore_with_same_pass
-    - _sign_with_keystore_with_diff_pass
+    - _sign_with_jarsigner_with_keystore_with_same_pass
+    - _sign_with_apksigner_with_keystore_with_diff_pass
     - _sign_with_keystore_with_default_alias
     - _sign_with_studio_gen_keystore
     - _sign_with_custom_artifact_name
 
-  _sign_with_keystore_with_same_pass:
+  _sign_with_jarsigner_with_keystore_with_same_pass:
     title: Step Test - keystore pass == key pass
     envs:
     - KEYSTORE_URL: $SAME_PASS_ANDROID_KEYSTORE_URL
     - KEYSTORE_PASSWORD: $SAME_PASS_ANDROID_KEYSTORE_PASSWORD
     - KEYSTORE_ALIAS: $SAME_PASS_ANDROID_KEY_ALIAS
     - KEY_PASSWORD: $SAME_PASS_ANDROID_KEY_PASSWORD
+    - SIGNER_TOOL: jarsigner
     after_run:
     - _sign_app
 
-  _sign_with_keystore_with_diff_pass:
+  _sign_with_apksigner_with_keystore_with_diff_pass:
     title: Step Test - keystore pass != key pass
     envs:
     - KEYSTORE_URL: $DIFF_PASS_ANDROID_KEYSTORE_URL
     - KEYSTORE_PASSWORD: $DIFF_PASS_ANDROID_KEYSTORE_PASSWORD
     - KEYSTORE_ALIAS: $DIFF_PASS_ANDROID_KEY_ALIAS
     - KEY_PASSWORD: $DIFF_PASS_ANDROID_KEY_PASSWORD
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -ex
+            if [ -z "$BITRISE_AAB_PATH" ]; then
+              envman add --key SIGNER_TOOL --value "apksigner"
+            fi
     after_run:
     - _sign_app
 
