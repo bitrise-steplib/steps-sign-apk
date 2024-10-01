@@ -106,7 +106,7 @@ workflows:
     - _sign_with_custom_artifact_name
 
   _sign_with_jarsigner_with_keystore_with_same_pass:
-    title: Step Test - keystore pass == key pass
+    title: Step Test - keystore pass == key pass - jarsigner
     envs:
     - KEYSTORE_URL: $SAME_PASS_ANDROID_KEYSTORE_URL
     - KEYSTORE_PASSWORD: $SAME_PASS_ANDROID_KEYSTORE_PASSWORD
@@ -117,7 +117,7 @@ workflows:
     - _sign_app
 
   _sign_with_apksigner_with_keystore_with_diff_pass:
-    title: Step Test - keystore pass != key pass
+    title: Step Test - keystore pass != key pass - apksigner for APK files
     envs:
     - KEYSTORE_URL: $DIFF_PASS_ANDROID_KEYSTORE_URL
     - KEYSTORE_PASSWORD: $DIFF_PASS_ANDROID_KEYSTORE_PASSWORD
