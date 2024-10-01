@@ -239,7 +239,8 @@ func validate(cfg configs) error {
 			return fmt.Errorf("BuildArtifactPath not exist at: %s", buildArtifactPath)
 		}
 
-		signAAB := strings.EqualFold(buildArtifactPath, ".aab")
+		artifactExt := path.Ext(buildArtifactPath)
+		signAAB := strings.EqualFold(artifactExt, ".aab")
 		if cfg.SignerTool == "apksigner" && signAAB {
 			failf("signer tool apksigner does not support signing AABs, please use automatic or jarsigner instead")
 		}
