@@ -6,7 +6,7 @@ app:
   - TEST_APP_REPO: https://github.com/bitrise-io/sample-apps-android-abi-split.git
   - TEST_APP_BRANCH: master
   - TEST_APP_GRADLE_WRAPPER_PATH: ./gradlew
-  - SIGNER_TOOL: automatic
+  - ORIG_SIGNER_TOOL: automatic
   # define these in your .bitrise.secrets.yml
   # Keystore password == key password
   - SAME_PASS_ANDROID_KEYSTORE_URL: $SAME_PASS_ANDROID_KEYSTORE_URL
@@ -114,7 +114,9 @@ workflows:
     - KEY_PASSWORD: $SAME_PASS_ANDROID_KEY_PASSWORD
     - SIGNER_TOOL: jarsigner
     after_run:
+    - _setup_signer_tool_env_var
     - _sign_app
+    - _reset_signer_tool_env_var
 
   _sign_with_apksigner_with_keystore_with_diff_pass:
     title: Step Test - keystore pass != key pass - apksigner for APK files
@@ -133,7 +135,9 @@ workflows:
               envman add --key SIGNER_TOOL --value "apksigner"
             fi
     after_run:
+    - _setup_signer_tool_env_var
     - _sign_app
+    - _reset_signer_tool_env_var
 
   _sign_with_keystore_with_default_alias:
     title: Step Test - default alias
@@ -143,7 +147,9 @@ workflows:
     - KEYSTORE_ALIAS: $DEFAULT_ALIAS_ANDROID_KEY_ALIAS
     - KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
     after_run:
+    - _setup_signer_tool_env_var
     - _sign_app
+    - _reset_signer_tool_env_var
 
   _sign_with_studio_gen_keystore:
     title: Step Test - android studio generated keystore (jks)
@@ -153,7 +159,9 @@ workflows:
     - KEYSTORE_ALIAS: $STUDIO_GEN_ANDROID_KEY_ALIAS
     - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
     after_run:
+    - _setup_signer_tool_env_var
     - _sign_app
+    - _reset_signer_tool_env_var
 
   _sign_with_custom_artifact_name:
     title: Step Test - android studio generated keystore (jks) + custom artifact name
@@ -164,8 +172,10 @@ workflows:
     - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
     - OUTPUT_NAME: test-artifact-name
     after_run:
+    - _setup_signer_tool_env_var
     - _sign_app
     - _sign_with_custom_artifact_name_again
+    - _reset_signer_tool_env_var
 
   _sign_with_custom_artifact_name_again:
     title: Step Test - android studio generated keystore (jks) + custom artifact name second time to see collisions if any
@@ -176,7 +186,9 @@ workflows:
     - KEY_PASSWORD: $STUDIO_GEN_ANDROID_KEY_PASSWORD
     - OUTPUT_NAME: test-artifact-name
     after_run:
+    - _setup_signer_tool_env_var
     - _sign_app
+    - _reset_signer_tool_env_var
 
   _sign_app:
     steps:
@@ -200,3 +212,23 @@ workflows:
         - private_key_password: $KEY_PASSWORD
         - output_name: $OUTPUT_NAME
         - signer_tool: $SIGNER_TOOL
+
+  _setup_signer_tool_env_var:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -ex
+            if [ -z "$SIGNER_TOOL" ]; then
+              envman add --key SIGNER_TOOL --value "$ORIG_SIGNER_TOOL"
+            fi
+
+  _reset_signer_tool_env_var:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -ex
+            envman unset --key SIGNER_TOOL
