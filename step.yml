@@ -103,14 +103,20 @@ inputs:
       - `automatic`: Enable page alignment for .so files, unless atribute `extractNativeLibs="true"` is set in the AndroidManifest.xml
       - `true`: Enable memory page alignment for .so files
       - `false`: Disable memory page alignment for .so files
-- use_apk_signer: "false"
+- signer_tool: automatic
   opts:
-    title: Enables apksigner
-    description: Indicates if the signature should be done using `apksigner` instead of `jarsigner`.
+    title: Signer tool
     is_required: true
     value_options:
-    - "true"
-    - "false"
+    - automatic
+    - apksigner
+    - jarsigner
+    description: |
+      Indicates which tool should be used for signing the app.
+
+      - `automatic`: Uses the `apksigner` tool to sign an APK and `jarsigner` tool to sign an AAB file.
+      - `apksigner`: Uses the `apksigner` tool to sign the app.
+      - `jarsigner`: Uses the `jarsigner` tool to sign the app.
 - signer_scheme: automatic
   opts:
     title: APK Signature Scheme

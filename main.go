@@ -38,11 +38,19 @@ type configs struct {
 	PageAlign           string `env:"page_align,opt[automatic,true,false]"`
 	SignerScheme        string `env:"signer_scheme,opt[automatic,v2,v3,v4]"`
 	DebuggablePermitted string `env:"debuggable_permitted,opt[true,false]"`
-	UseAPKSigner        bool   `env:"use_apk_signer,opt[true,false]"`
+	SignerTool          string `env:"signer_tool,opt[automatic,apksigner,jarsigner]"`
 
 	// Deprecated
 	APKPath string `env:"apk_path"`
 }
+
+type codeSignerTool string
+
+const (
+	apksignerSignerTool codeSignerTool = "apksigner"
+	jarsignerSignerTool codeSignerTool = "jarsigner"
+	automaticSignerTool codeSignerTool = "automatic"
+)
 
 type pageAlignStatus int
 
@@ -230,6 +238,12 @@ func validate(cfg configs) error {
 		} else if !exist {
 			return fmt.Errorf("BuildArtifactPath not exist at: %s", buildArtifactPath)
 		}
+
+		artifactExt := path.Ext(buildArtifactPath)
+		signAAB := strings.EqualFold(artifactExt, ".aab")
+		if cfg.SignerTool == "apksigner" && signAAB {
+			failf("signer tool apksigner does not support signing AABs, please use automatic or jarsigner instead")
+		}
 	}
 	return nil
 }
@@ -338,8 +352,16 @@ func main() {
 		}
 
 		signAAB := strings.EqualFold(artifactExt, ".aab")
+		signerTool := cfg.SignerTool
+		if signerTool == string(automaticSignerTool) {
+			if signAAB {
+				signerTool = string(jarsignerSignerTool)
+			} else {
+				signerTool = string(apksignerSignerTool)
+			}
+		}
 
-		if signAAB || !cfg.UseAPKSigner {
+		if signerTool == string(jarsignerSignerTool) {
 			isSigned, err := isBuildArtifactSigned(aapt, unsignedBuildArtifactPth)
 			if err != nil {
 				failf("Run: failed to check if build artifact is signed: %s", err)
@@ -359,14 +381,16 @@ func main() {
 			log.Printf("Skipping removal of existing signature as apksigner can re-sign already signed apk.")
 		}
 
-		if signAAB {
-			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
-			signedAABPaths = append(signedAABPaths, fullPath)
-		} else if cfg.UseAPKSigner {
-			fullPath := signAPK(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.OutputName, apkSigner, pageAlignConfig)
-			signedAPKPaths = append(signedAPKPaths, fullPath)
+		var fullPath string
+		if signerTool == string(apksignerSignerTool) {
+			fullPath = signAPK(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.OutputName, apkSigner, pageAlignConfig)
 		} else {
-			fullPath := signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
+			fullPath = signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
+		}
+
+		if signAAB {
+			signedAABPaths = append(signedAABPaths, fullPath)
+		} else {
 			signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
 
