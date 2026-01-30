@@ -34,54 +34,9 @@ If you wish to get your Android project signed automatically, use the **Android 
 
 ## 🧩 Get started
 
-Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
+Add this step directly to your workflow in the [Bitrise Workflow Editor](https://docs.bitrise.io/en/bitrise-ci/workflows-and-pipelines/steps/adding-steps-to-a-workflow.html).
 
 You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
-
-### Examples
-
-1. Build an Android App Bundle:
-
-```yaml
-workflows:
-  release:
-    envs:
-    - PROJECT_LOCATION: .
-    - MODULE: app
-    - VARIANT: release
-    # If the Android keystore is configured in the workflow editor, BITRISEIO_ANDROID_KEYSTORE* envs will be set automatically
-    - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
-    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
-    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
-    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
-    
-    steps:
-    - activate-ssh-key:
-        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-    - git-clone: {}
-    - install-missing-android-tools:
-        inputs:
-        - gradlew_path: $PROJECT_LOCATION/gradlew
-    - android-build:
-        inputs:
-        - project_location: $PROJECT_LOCATION
-        - module: $MODULE
-        - variant: $VARIANT
-        - build_type: aab
-```
-2. Sign the App Bundle:
-
-```yaml
-    - sign-apk:
-        inputs:
-        - use_apk_signer: false
-```
-
-3. Deploy the signed App Bundle to Bitrise:
-
-```yaml
-    - deploy-to-bitrise-io: {}
-```
 
 ## ⚙️ Configuration
 
@@ -121,9 +76,8 @@ workflows:
 
 We welcome [pull requests](https://github.com/bitrise-steplib/steps-sign-apk/pulls) and [issues](https://github.com/bitrise-steplib/steps-sign-apk/issues) against this repository.
 
-For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
+For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://docs.bitrise.io/en/bitrise-ci/bitrise-cli/running-your-first-local-build-with-the-cli.html).
 
 Learn more about developing steps:
 
-- [Create your own step](https://devcenter.bitrise.io/contributors/create-your-own-step/)
-- [Testing your Step](https://devcenter.bitrise.io/contributors/testing-and-versioning-your-steps/)
+- [Create your own step](https://docs.bitrise.io/en/bitrise-ci/workflows-and-pipelines/developing-your-own-bitrise-step/developing-a-new-step.html)

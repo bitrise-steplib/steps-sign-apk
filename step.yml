@@ -32,10 +32,11 @@ host_os_tags:
 - ubuntu
 project_type_tags:
 - android
-- xamarin
-- react-native
 - cordova
+- flutter
 - ionic
+- kotlin-multiplatform
+- react-native
 type_tags:
 - code-sign
 is_requires_admin_user: false
