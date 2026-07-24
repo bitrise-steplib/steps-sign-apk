@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/errorutil"
-	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/v2/command"
 )
 
 func createSignerSchemeCmd(signerScheme string) string {
@@ -84,10 +82,9 @@ func (configuration SignatureConfiguration) createSignCmd(buildArtifactPth strin
 	return cmdSlice, nil
 }
 
-// SignBuildArtifact buildArtifactPth
-// This signs the provided APK, stripping out any pre-existing signatures. Signing
-// is performed using one or more signers, each represented by an asymmetric key
-// pair and a corresponding certificate.
+// SignBuildArtifact signs the provided APK, stripping out any pre-existing signatures.
+// Signing is performed using one or more signers, each represented by an asymmetric
+// key pair and a corresponding certificate.
 //
 // - buildArtifactPth: The path to the unsigned APK
 // - destBuildArtifactPth: Path were the signed APK will be stored
@@ -97,10 +94,9 @@ func (configuration SignatureConfiguration) SignBuildArtifact(buildArtifactPth s
 		return fmt.Errorf("failed to create signing command from signing configuration: %v", err)
 	}
 
-	prinatableCmd := command.PrintableCommandArgs(false, secureSignCmd(cmdSlice))
-	log.Printf("=> %s", prinatableCmd)
+	configuration.logger.Printf("=> %s", printableCommandArgs(configuration.cmdFactory, secureSignCmd(cmdSlice)))
 
-	out, err := executeForOutput(cmdSlice)
+	out, err := executeForOutput(configuration.cmdFactory, cmdSlice)
 	if err != nil {
 		return properError(err, out)
 	}
@@ -108,10 +104,9 @@ func (configuration SignatureConfiguration) SignBuildArtifact(buildArtifactPth s
 	return err
 }
 
-// VerifyBuildArtifact buildArtifactPth
-// This checks whether the provided APK will verify on Android. By default, this
-// checks whether the APK will verify on all Android platform versions supported
-// by the APK (as declared using minSdkVersion in AndroidManifest.xml).
+// VerifyBuildArtifact checks whether the provided APK will verify on Android.
+// By default this checks all Android platform versions supported by the APK
+// (as declared using minSdkVersion in AndroidManifest.xml).
 //
 // - buildArtifactPth: The path of the signed APK
 func (configuration SignatureConfiguration) VerifyBuildArtifact(buildArtifactPth string) error {
@@ -123,10 +118,9 @@ func (configuration SignatureConfiguration) VerifyBuildArtifact(buildArtifactPth
 		buildArtifactPth,
 	}
 
-	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
-	log.Printf("=> %s", prinatableCmd)
+	configuration.logger.Printf("=> %s", printableCommandArgs(configuration.cmdFactory, cmdSlice))
 
-	out, err := executeForOutput(cmdSlice)
+	out, err := executeForOutput(configuration.cmdFactory, cmdSlice)
 	if err != nil {
 		return properError(err, out)
 	}
@@ -134,18 +128,19 @@ func (configuration SignatureConfiguration) VerifyBuildArtifact(buildArtifactPth
 	return nil
 }
 
-func executeForOutput(cmdSlice []string) (string, error) {
-	cmd, err := command.NewFromSlice(cmdSlice)
-	if err != nil {
-		return "", fmt.Errorf("Failed to create command, error: %s", err)
+func executeForOutput(cmdFactory command.Factory, cmdSlice []string) (string, error) {
+	if len(cmdSlice) == 0 {
+		return "", fmt.Errorf("empty command")
 	}
 
 	var outputBuf bytes.Buffer
 	writer := io.MultiWriter(&outputBuf)
-	cmd.SetStderr(writer)
-	cmd.SetStdout(writer)
+	cmd := cmdFactory.Create(cmdSlice[0], cmdSlice[1:], &command.Opts{
+		Stdout: writer,
+		Stderr: writer,
+	})
 
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		err = fmt.Errorf("%s\n%s", outputBuf.String(), err)
 	}
@@ -153,10 +148,23 @@ func executeForOutput(cmdSlice []string) (string, error) {
 	return outputBuf.String(), err
 }
 
+// printableCommandArgs shell-escapes cmdSlice via a throwaway v2 command.
+func printableCommandArgs(cmdFactory command.Factory, cmdSlice []string) string {
+	if len(cmdSlice) == 0 {
+		return ""
+	}
+
+	cmd := cmdFactory.Create(cmdSlice[0], cmdSlice[1:], nil)
+
+	return cmd.PrintableCommandArgs()
+}
+
 func properError(err error, out string) error {
-	if errorutil.IsExitStatusError(err) {
+	var exitErr *command.ExitStatusError
+	if errors.As(err, &exitErr) {
 		return errors.New(out)
 	}
+
 	return err
 }
 
@@ -171,5 +179,6 @@ func secureSignCmd(cmdSlice []string) []string {
 		secureNextParam = (param == "--ks-pass" || param == "--key-pass")
 		securedCmdSlice = append(securedCmdSlice, param)
 	}
+
 	return securedCmdSlice
 }

@@ -10,49 +10,54 @@ import (
 	"io"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/errorutil"
-	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
 )
 
 const jarsigner = "/usr/bin/jarsigner"
 
-// Helper ...
-type Helper struct {
-	keystorePth        string
-	keystorePassword   string
-	alias              string
-	signatureAlgorithm string
+// Runner wraps a v2 command.Factory + Logger, providing the small
+// command-execution helpers this step used to get from the v1 command package.
+type Runner struct {
+	Logger     log.Logger
+	CmdFactory command.Factory
 }
 
-// Execute ...
-func Execute(cmdSlice []string) error {
-	cmd, err := command.NewFromSlice(cmdSlice)
-	if err != nil {
-		return fmt.Errorf("Failed to create command, error: %s", err)
+// NewRunner returns a Runner backed by the provided logger and factory.
+func NewRunner(logger log.Logger, cmdFactory command.Factory) Runner {
+	return Runner{Logger: logger, CmdFactory: cmdFactory}
+}
+
+// Execute runs cmdSlice and streams the combined output to the logger.
+func (r Runner) Execute(cmdSlice []string) error {
+	if len(cmdSlice) == 0 {
+		return fmt.Errorf("empty command")
 	}
 
-	log.Printf("=> %s\n", cmd.PrintableCommandArgs())
+	cmd := r.CmdFactory.Create(cmdSlice[0], cmdSlice[1:], nil)
+	r.Logger.Printf("=> %s\n", cmd.PrintableCommandArgs())
 
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
-	log.Printf(out)
+	r.Logger.Printf(out)
+
 	return err
 }
 
-// ExecuteForOutput ...
-func ExecuteForOutput(cmdSlice []string) (string, error) {
-	cmd, err := command.NewFromSlice(cmdSlice)
-	if err != nil {
-		return "", fmt.Errorf("Failed to create command, error: %s", err)
+// ExecuteForOutput runs cmdSlice and returns the combined stdout+stderr as a string.
+func (r Runner) ExecuteForOutput(cmdSlice []string) (string, error) {
+	if len(cmdSlice) == 0 {
+		return "", fmt.Errorf("empty command")
 	}
 
 	var outputBuf bytes.Buffer
 	writer := io.MultiWriter(&outputBuf)
-	cmd.SetStderr(writer)
-	cmd.SetStdout(writer)
+	cmd := r.CmdFactory.Create(cmdSlice[0], cmdSlice[1:], &command.Opts{
+		Stdout: writer,
+		Stderr: writer,
+	})
 
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		err = fmt.Errorf("%s\n%s", outputBuf.String(), err)
 	}
@@ -60,9 +65,32 @@ func ExecuteForOutput(cmdSlice []string) (string, error) {
 	return outputBuf.String(), err
 }
 
+// PrintableCommandArgs returns a shell-escaped representation of cmdSlice by
+// constructing a throwaway command; kept as a helper so callers don't need
+// their own copy.
+func (r Runner) PrintableCommandArgs(cmdSlice []string) string {
+	if len(cmdSlice) == 0 {
+		return ""
+	}
+
+	cmd := r.CmdFactory.Create(cmdSlice[0], cmdSlice[1:], nil)
+
+	return cmd.PrintableCommandArgs()
+}
+
+// Helper ...
+type Helper struct {
+	runner             Runner
+	pathChecker        pathutil.PathChecker
+	keystorePth        string
+	keystorePassword   string
+	alias              string
+	signatureAlgorithm string
+}
+
 // NewHelper ...
-func NewHelper(keystorePth, keystorePassword, alias string) (Helper, error) {
-	if exist, err := pathutil.IsPathExists(keystorePth); err != nil {
+func NewHelper(runner Runner, pathChecker pathutil.PathChecker, keystorePth, keystorePassword, alias string) (Helper, error) {
+	if exist, err := pathChecker.IsPathExists(keystorePth); err != nil {
 		return Helper{}, err
 	} else if !exist {
 		return Helper{}, fmt.Errorf("keystore not exist at: %s", keystorePth)
@@ -85,7 +113,7 @@ func NewHelper(keystorePth, keystorePassword, alias string) (Helper, error) {
 		"-J-Duser.language=en-US",
 	}
 
-	out, err := ExecuteForOutput(cmdSlice)
+	out, err := runner.ExecuteForOutput(cmdSlice)
 	if err != nil {
 		return Helper{}, properError(err, out)
 	}
@@ -93,7 +121,7 @@ func NewHelper(keystorePth, keystorePassword, alias string) (Helper, error) {
 		return Helper{}, fmt.Errorf("failed to read keystore, maybe alias (%s) or password (%s) is not correct", alias, "****")
 	}
 
-	signatureAlgorithm, err := findSignatureAlgorithm(out)
+	signatureAlgorithm, err := findSignatureAlgorithm(runner.Logger, out)
 	if err != nil {
 		return Helper{}, err
 	}
@@ -102,6 +130,8 @@ func NewHelper(keystorePth, keystorePassword, alias string) (Helper, error) {
 	}
 
 	return Helper{
+		runner:             runner,
+		pathChecker:        pathChecker,
 		keystorePth:        keystorePth,
 		keystorePassword:   keystorePassword,
 		alias:              alias,
@@ -146,10 +176,12 @@ func (helper Helper) createSignCmd(buildArtifactPth, destBuildArtifactPth, priva
 
 // SignBuildArtifact ...
 func (helper Helper) SignBuildArtifact(buildArtifactPth, destBuildArtifactPth, privateKeyPassword string) error {
-	if exist, err := pathutil.IsPathExists(buildArtifactPth); err != nil {
-		return err
-	} else if !exist {
-		return fmt.Errorf("Build Artifact not exist at: %s", buildArtifactPth)
+	if helper.pathChecker != nil {
+		if exist, err := helper.pathChecker.IsPathExists(buildArtifactPth); err != nil {
+			return err
+		} else if !exist {
+			return fmt.Errorf("Build Artifact not exist at: %s", buildArtifactPth)
+		}
 	}
 
 	cmdSlice, err := helper.createSignCmd(buildArtifactPth, destBuildArtifactPth, privateKeyPassword)
@@ -157,16 +189,16 @@ func (helper Helper) SignBuildArtifact(buildArtifactPth, destBuildArtifactPth, p
 		return err
 	}
 
-	prinatableCmd := command.PrintableCommandArgs(false, secureSignCmd(cmdSlice))
-	log.Printf("=> %s", prinatableCmd)
+	helper.runner.Logger.Printf("=> %s", helper.runner.PrintableCommandArgs(secureSignCmd(cmdSlice)))
 
-	out, err := ExecuteForOutput(cmdSlice)
+	out, err := helper.runner.ExecuteForOutput(cmdSlice)
 	if err != nil {
 		return properError(err, out)
 	}
 	if !strings.Contains(out, "jar signed.") {
 		return errors.New(out)
 	}
+
 	return nil
 }
 
@@ -180,27 +212,29 @@ func (helper Helper) VerifyBuildArtifact(buildArtifactPth string) error {
 		buildArtifactPth,
 	}
 
-	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
-	log.Printf("=> %s", prinatableCmd)
+	helper.runner.Logger.Printf("=> %s", helper.runner.PrintableCommandArgs(cmdSlice))
 
-	out, err := ExecuteForOutput(cmdSlice)
+	out, err := helper.runner.ExecuteForOutput(cmdSlice)
 	if err != nil {
 		return properError(err, out)
 	}
 	if !strings.Contains(out, "jar verified.") {
 		return errors.New(out)
 	}
+
 	return nil
 }
 
 func properError(err error, out string) error {
-	if errorutil.IsExitStatusError(err) {
+	var exitErr *command.ExitStatusError
+	if errors.As(err, &exitErr) {
 		return errors.New(out)
 	}
+
 	return err
 }
 
-func findSignatureAlgorithm(keystoreData string) (string, error) {
+func findSignatureAlgorithm(logger log.Logger, keystoreData string) (string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(keystoreData))
 
 	for scanner.Scan() {
@@ -217,11 +251,14 @@ func findSignatureAlgorithm(keystoreData string) (string, error) {
 			split = strings.Split(alg, " ")
 
 			if len(split) > 1 {
-				log.Warnf("🚨 Signature algorithm name contains unnecessary postfix: %s", alg)
-				log.Printf("Trimmed signature algorithm name: %s", split[0])
+				if logger != nil {
+					logger.Warnf("🚨 Signature algorithm name contains unnecessary postfix: %s", alg)
+					logger.Printf("Trimmed signature algorithm name: %s", split[0])
+				}
 
 				alg = split[0]
 			}
+
 			return alg, nil
 		}
 	}
@@ -244,5 +281,6 @@ func secureSignCmd(cmdSlice []string) []string {
 		secureNextParam = (param == "-storepass" || param == "-keypass")
 		securedCmdSlice = append(securedCmdSlice, param)
 	}
+
 	return securedCmdSlice
 }
