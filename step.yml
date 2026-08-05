@@ -150,6 +150,21 @@ inputs:
     description: |
       If empty, then the output name is `app-release-bitrise-signed`.
       Otherwise, it's the specified name. Do not add the file extension here.
+- artifact_map_path: $BITRISE_ANDROID_ARTIFACT_MAP_PATH
+  opts:
+    title: Artifact map file path
+    summary: Path of the variant-keyed artifact map (JSON) exported by the Android build steps; the step keeps it pointing at the signed artifacts.
+    description: |
+      Path of the variant-keyed artifact map exported by the Android build steps
+      (Gradle Runner, Android Build) as `$BITRISE_ANDROID_ARTIFACT_MAP_PATH`. The JSON
+      document records which APK/AAB files and which R8/ProGuard mapping file belong to
+      the same build variant.
+
+      Signing produces renamed copies of the artifacts, so the step updates the map to
+      reference the signed files — this keeps later steps (e.g. Google Play deploy) able
+      to pair each artifact with its variant's mapping file. When the input is empty or
+      the file does not exist, nothing happens.
+    is_required: false
 - verbose_log: "false"
   opts:
     title: Enable verbose logging?

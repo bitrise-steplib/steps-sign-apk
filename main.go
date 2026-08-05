@@ -33,6 +33,7 @@ type configs struct {
 	KeystoreAlias      string `env:"keystore_alias,required"`
 	PrivateKeyPassword string `env:"private_key_password"`
 	OutputName         string `env:"output_name"`
+	ArtifactMapPath    string `env:"artifact_map_path"`
 
 	VerboseLog          bool   `env:"verbose_log,opt[true,false]"`
 	PageAlign           string `env:"page_align,opt[automatic,true,false]"`
@@ -327,6 +328,7 @@ func main() {
 	buildArtifactPaths := parseAppList(cfg.BuildArtifactPath)
 	signedAPKPaths := make([]string, 0)
 	signedAABPaths := make([]string, 0)
+	renames := make([]artifactRename, 0, len(buildArtifactPaths))
 
 	fmt.Println()
 	log.Infof("Signing %d Build Artifacts", len(buildArtifactPaths))
@@ -393,6 +395,7 @@ func main() {
 		} else {
 			signedAPKPaths = append(signedAPKPaths, fullPath)
 		}
+		renames = append(renames, artifactRename{original: buildArtifactPath, signed: fullPath})
 
 		fmt.Println()
 		// ---
@@ -416,6 +419,11 @@ func main() {
 		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH Environment Variable export")
 		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH_LIST Environment Variable export")
 	}
+
+	// Keep the variant-keyed artifact map (exported by the Android build
+	// steps) pointing at the signed artifacts, so a later deploy step can
+	// still pair each artifact with its variant's mapping file.
+	updateArtifactMap(cfg.ArtifactMapPath, renames)
 }
 
 func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, privateKeyPassword string, outputName string, keystore keystore.Helper, pageAlignConfig pageAlignStatus) string {
