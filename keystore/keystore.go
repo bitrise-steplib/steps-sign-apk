@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
+	"os"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/v2/command"
@@ -29,33 +29,39 @@ func NewRunner(logger log.Logger, cmdFactory command.Factory) Runner {
 	return Runner{Logger: logger, CmdFactory: cmdFactory}
 }
 
-// Execute runs cmdSlice and streams the combined output to the logger.
+// Execute runs cmdSlice, streaming stdout/stderr directly.
 func (r Runner) Execute(cmdSlice []string) error {
 	if len(cmdSlice) == 0 {
 		return fmt.Errorf("empty command")
 	}
 
-	cmd := r.CmdFactory.Create(cmdSlice[0], cmdSlice[1:], nil)
-	r.Logger.Printf("=> %s\n", cmd.PrintableCommandArgs())
+	cmd := r.CmdFactory.Create(cmdSlice[0], cmdSlice[1:], &command.Opts{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	})
+	r.Logger.Printf("=> %s", cmd.PrintableCommandArgs())
 
-	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
-	r.Logger.Printf(out)
-
-	return err
+	return cmd.Run()
 }
 
 // ExecuteForOutput runs cmdSlice and returns the combined stdout+stderr as a string.
-func (r Runner) ExecuteForOutput(cmdSlice []string) (string, error) {
+// Optional logCmdSlice replaces cmdSlice in the "=>" log line (e.g. sanitized secrets).
+func (r Runner) ExecuteForOutput(cmdSlice []string, logCmdSlice ...[]string) (string, error) {
 	if len(cmdSlice) == 0 {
 		return "", fmt.Errorf("empty command")
 	}
 
+	logSlice := cmdSlice
+	if len(logCmdSlice) > 0 && logCmdSlice[0] != nil {
+		logSlice = logCmdSlice[0]
+	}
+
 	var outputBuf bytes.Buffer
-	writer := io.MultiWriter(&outputBuf)
 	cmd := r.CmdFactory.Create(cmdSlice[0], cmdSlice[1:], &command.Opts{
-		Stdout: writer,
-		Stderr: writer,
+		Stdout: &outputBuf,
+		Stderr: &outputBuf,
 	})
+	r.Logger.Printf("=> %s", r.CmdFactory.Create(logSlice[0], logSlice[1:], nil).PrintableCommandArgs())
 
 	err := cmd.Run()
 	if err != nil {
@@ -63,19 +69,6 @@ func (r Runner) ExecuteForOutput(cmdSlice []string) (string, error) {
 	}
 
 	return outputBuf.String(), err
-}
-
-// PrintableCommandArgs returns a shell-escaped representation of cmdSlice by
-// constructing a throwaway command; kept as a helper so callers don't need
-// their own copy.
-func (r Runner) PrintableCommandArgs(cmdSlice []string) string {
-	if len(cmdSlice) == 0 {
-		return ""
-	}
-
-	cmd := r.CmdFactory.Create(cmdSlice[0], cmdSlice[1:], nil)
-
-	return cmd.PrintableCommandArgs()
 }
 
 // Helper ...
@@ -90,6 +83,10 @@ type Helper struct {
 
 // NewHelper ...
 func NewHelper(runner Runner, pathChecker pathutil.PathChecker, keystorePth, keystorePassword, alias string) (Helper, error) {
+	if pathChecker == nil {
+		return Helper{}, errors.New("pathChecker must not be nil")
+	}
+
 	if exist, err := pathChecker.IsPathExists(keystorePth); err != nil {
 		return Helper{}, err
 	} else if !exist {
@@ -113,7 +110,7 @@ func NewHelper(runner Runner, pathChecker pathutil.PathChecker, keystorePth, key
 		"-J-Duser.language=en-US",
 	}
 
-	out, err := runner.ExecuteForOutput(cmdSlice)
+	out, err := runner.ExecuteForOutput(cmdSlice, secureCmd(cmdSlice))
 	if err != nil {
 		return Helper{}, properError(err, out)
 	}
@@ -176,12 +173,10 @@ func (helper Helper) createSignCmd(buildArtifactPth, destBuildArtifactPth, priva
 
 // SignBuildArtifact ...
 func (helper Helper) SignBuildArtifact(buildArtifactPth, destBuildArtifactPth, privateKeyPassword string) error {
-	if helper.pathChecker != nil {
-		if exist, err := helper.pathChecker.IsPathExists(buildArtifactPth); err != nil {
-			return err
-		} else if !exist {
-			return fmt.Errorf("Build Artifact not exist at: %s", buildArtifactPth)
-		}
+	if exist, err := helper.pathChecker.IsPathExists(buildArtifactPth); err != nil {
+		return err
+	} else if !exist {
+		return fmt.Errorf("Build Artifact not exist at: %s", buildArtifactPth)
 	}
 
 	cmdSlice, err := helper.createSignCmd(buildArtifactPth, destBuildArtifactPth, privateKeyPassword)
@@ -189,9 +184,7 @@ func (helper Helper) SignBuildArtifact(buildArtifactPth, destBuildArtifactPth, p
 		return err
 	}
 
-	helper.runner.Logger.Printf("=> %s", helper.runner.PrintableCommandArgs(secureSignCmd(cmdSlice)))
-
-	out, err := helper.runner.ExecuteForOutput(cmdSlice)
+	out, err := helper.runner.ExecuteForOutput(cmdSlice, secureCmd(cmdSlice))
 	if err != nil {
 		return properError(err, out)
 	}
@@ -211,8 +204,6 @@ func (helper Helper) VerifyBuildArtifact(buildArtifactPth string) error {
 		"-certs",
 		buildArtifactPth,
 	}
-
-	helper.runner.Logger.Printf("=> %s", helper.runner.PrintableCommandArgs(cmdSlice))
 
 	out, err := helper.runner.ExecuteForOutput(cmdSlice)
 	if err != nil {
@@ -270,7 +261,7 @@ func findSignatureAlgorithm(logger log.Logger, keystoreData string) (string, err
 	return "", nil
 }
 
-func secureSignCmd(cmdSlice []string) []string {
+func secureCmd(cmdSlice []string) []string {
 	securedCmdSlice := []string{}
 	secureNextParam := false
 	for _, param := range cmdSlice {

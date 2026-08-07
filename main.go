@@ -169,10 +169,8 @@ func filterSigningFiles(fileList []string) []string {
 	return signingFiles
 }
 
-func removeFilesFromBuildArtifact(runner keystore.Runner, logger log.Logger, aapt, pth string, files []string) error {
+func removeFilesFromBuildArtifact(runner keystore.Runner, aapt, pth string, files []string) error {
 	cmdSlice := append([]string{aapt, "remove", pth}, files...)
-
-	logger.Printf("=> %s", runner.PrintableCommandArgs(cmdSlice))
 
 	out, err := runner.ExecuteForOutput(cmdSlice)
 	if err != nil {
@@ -220,7 +218,7 @@ func unsignBuildArtifact(runner keystore.Runner, logger log.Logger, aapt, pth st
 		return nil
 	}
 
-	return removeFilesFromBuildArtifact(runner, logger, aapt, pth, signingFiles)
+	return removeFilesFromBuildArtifact(runner, aapt, pth, signingFiles)
 }
 
 func prettyBuildArtifactBasename(buildArtifactPth string) string {

@@ -52,7 +52,6 @@ func (config *zipalignConfiguration) zipalignArtifact(artifactPath, dstPath stri
 		cmdSlice = append(cmdSlice, "-p")
 	}
 	cmdSlice = append(cmdSlice, "-f", "4", artifactPath, dstPath)
-	config.logger.Printf("=> %s", config.runner.PrintableCommandArgs(cmdSlice))
 
 	_, err := config.runner.ExecuteForOutput(cmdSlice)
 
