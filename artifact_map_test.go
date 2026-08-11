@@ -32,7 +32,7 @@ func Test_updateArtifactMap_RenamesSignedArtifacts(t *testing.T) {
 
 	m, err := artifactmap.Read(mapPath)
 	require.NoError(t, err)
-	entry := m.Variants["demoRelease"]
+	entry := m.Modules["app"]["demoRelease"]
 	assert.Equal(t, []string{"app-demo-release-bitrise-signed.aab"}, entry.AAB)
 	assert.Equal(t, []string{"app-demo-release.apk"}, entry.APK, "unsigned APK reference must stay")
 	assert.Equal(t, "mapping.txt", entry.Mapping, "mapping reference must stay")
