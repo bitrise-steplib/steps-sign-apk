@@ -4,7 +4,7 @@ github.com/avast/apkparser
 # github.com/bitrise-io/go-android v0.0.0-20210527143215-3ad22ad02e2e
 ## explicit; go 1.16
 github.com/bitrise-io/go-android/sdk
-# github.com/bitrise-io/go-android/v2 v2.0.0-alpha.17.0.20260818111413-e5a94341c2ad
+# github.com/bitrise-io/go-android/v2 v2.0.0-alpha.17.0.20260818113528-725a88472878
 ## explicit; go 1.22
 github.com/bitrise-io/go-android/v2/gradle/artifactmap
 # github.com/bitrise-io/go-steputils v1.0.6
