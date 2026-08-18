@@ -2,8 +2,8 @@ github.com/avast/apkparser v0.0.0-20250626104540-d53391f4d69d h1:PGSn2pnK/u5ZBom
 github.com/avast/apkparser v0.0.0-20250626104540-d53391f4d69d/go.mod h1:3F9A8btIerUcuy7Fmno+g/nIk4ELKJ6NCs2/KK1bvLs=
 github.com/bitrise-io/go-android v0.0.0-20210527143215-3ad22ad02e2e h1:lkJnz+yXbIqFGpDTdRBBshqxeX0UCndJmEOp0yy2GRQ=
 github.com/bitrise-io/go-android v0.0.0-20210527143215-3ad22ad02e2e/go.mod h1:gGXmY8hJ1x44AC98TIvZZvxP7o+hs4VI6wgmO4JMfEg=
-github.com/bitrise-io/go-android/v2 v2.0.0-alpha.16.0.20260811092717-c278eadef180 h1:awgRf7FKhxs4A9bc2ZX9lI2ZDeT5DoBw3gI45YA9jIg=
-github.com/bitrise-io/go-android/v2 v2.0.0-alpha.16.0.20260811092717-c278eadef180/go.mod h1:+Cm0XgGA/50c4Xlsm8MBHgLYFVFj46sHW6G2/dwDBQI=
+github.com/bitrise-io/go-android/v2 v2.0.0-alpha.17.0.20260818111413-e5a94341c2ad h1:rKOJ2+x53YTyzUAiIEfbvmH9CYlYkXkpcSlbSoD5eFo=
+github.com/bitrise-io/go-android/v2 v2.0.0-alpha.17.0.20260818111413-e5a94341c2ad/go.mod h1:+Cm0XgGA/50c4Xlsm8MBHgLYFVFj46sHW6G2/dwDBQI=
 github.com/bitrise-io/go-steputils v0.0.0-20210514150206-5b6261447e77/go.mod h1:H0iZjgsAR5NA6pnlD/zKB6AbxEsskq55pwJ9klVmP8w=
 github.com/bitrise-io/go-steputils v1.0.6 h1:eBRL70DWwEd7DWYGd5Ds7OSIY5HElzhoDOI6UuITKQg=
 github.com/bitrise-io/go-steputils v1.0.6/go.mod h1:YIUaQnIAyK4pCvQG0hYHVkSzKNT9uL2FWmkFNW4mfNI=

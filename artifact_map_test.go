@@ -15,6 +15,7 @@ func writeTestMap(t *testing.T) string {
 	m, _ := artifactmap.Build(
 		[]artifactmap.File{{DeployPath: "/deploy/app-demo-release.apk", SourcePath: "/src/app/build/outputs/apk/demo/release/app-demo-release.apk"}},
 		[]artifactmap.File{{DeployPath: "/deploy/app-demo-release.aab", SourcePath: "/src/app/build/outputs/bundle/demoRelease/app-demo-release.aab"}},
+		nil,
 		[]artifactmap.File{{DeployPath: "/deploy/mapping.txt", SourcePath: "/src/app/build/outputs/mapping/demoRelease/mapping.txt"}},
 	)
 	mapPath := filepath.Join(t.TempDir(), artifactmap.DefaultFileName)
