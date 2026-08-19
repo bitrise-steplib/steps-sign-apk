@@ -1,27 +1,15 @@
 package main
 
 import (
-	"io/ioutil"
-	"os"
 	"path"
 	"reflect"
 	"testing"
 
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-io/go-utils/log"
 )
 
 func Test_parseAPKextractNativeLibs(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatalf("setup: failed to create temp dir, error: %s", err)
-	}
-
-	defer func() {
-		if err := os.RemoveAll(tmpDir); err != nil {
-			log.Warnf("failed to remove temp dir, error: %s", err)
-		}
-	}()
+	tmpDir := t.TempDir()
 
 	gitCommand, err := git.New(tmpDir)
 	if err != nil {
