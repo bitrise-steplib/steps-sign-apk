@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/avast/apkparser v0.0.0-20250626104540-d53391f4d69d
 	github.com/bitrise-io/go-android v0.0.0-20210527143215-3ad22ad02e2e
-	github.com/bitrise-io/go-android/v2 v2.0.0-alpha.17.0.20260818113528-725a88472878
+	github.com/bitrise-io/go-android/v2 v2.0.0-alpha.17.0.20260819083607-6fb23cb5bad1
 	github.com/bitrise-io/go-steputils v1.0.6
 	github.com/bitrise-io/go-utils v1.0.15
 	github.com/stretchr/testify v1.9.0
