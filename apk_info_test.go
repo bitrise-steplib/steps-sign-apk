@@ -1,33 +1,28 @@
 package main
 
 import (
-	"io/ioutil"
+	"context"
 	"os"
+	"os/exec"
 	"path"
 	"reflect"
 	"testing"
-
-	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-io/go-utils/log"
 )
 
 func Test_parseAPKextractNativeLibs(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		t.Fatalf("setup: failed to create temp dir, error: %s", err)
 	}
 
 	defer func() {
 		if err := os.RemoveAll(tmpDir); err != nil {
-			log.Warnf("failed to remove temp dir, error: %s", err)
+			t.Logf("failed to remove temp dir, error: %s", err)
 		}
 	}()
 
-	gitCommand, err := git.New(tmpDir)
-	if err != nil {
-		t.Fatalf("setup: failed to create git project, error: %s", err)
-	}
-	if err := gitCommand.Clone("https://github.com/bitrise-io/sample-artifacts.git").Run(); err != nil {
+	cloneCmd := exec.CommandContext(context.Background(), "git", "clone", "https://github.com/bitrise-io/sample-artifacts.git", tmpDir)
+	if err := cloneCmd.Run(); err != nil {
 		t.Fatalf("setup: failed to clone test artifact repo, error: %s", err)
 	}
 

@@ -103,7 +103,7 @@ Certificate fingerprints:
 	 Signature algorithm name: SHA256withRSA
 	 Version: 3
 `
-	signatureAlgorithm, err := findSignatureAlgorithm(keystoreData)
+	signatureAlgorithm, err := findSignatureAlgorithm(nil, keystoreData)
 	require.NoError(t, err)
 	require.Equal(t, "SHA256withRSA", signatureAlgorithm)
 }
