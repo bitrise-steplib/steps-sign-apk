@@ -45,15 +45,10 @@ func (r Runner) Execute(cmdSlice []string) error {
 }
 
 // ExecuteForOutput runs cmdSlice and returns the combined stdout+stderr as a string.
-// Optional logCmdSlice replaces cmdSlice in the "=>" log line (e.g. sanitized secrets).
-func (r Runner) ExecuteForOutput(cmdSlice []string, logCmdSlice ...[]string) (string, error) {
+// The "=>" log line is always sanitized via secureCmd.
+func (r Runner) ExecuteForOutput(cmdSlice []string) (string, error) {
 	if len(cmdSlice) == 0 {
 		return "", fmt.Errorf("empty command")
-	}
-
-	logSlice := cmdSlice
-	if len(logCmdSlice) > 0 && logCmdSlice[0] != nil {
-		logSlice = logCmdSlice[0]
 	}
 
 	var outputBuf bytes.Buffer
@@ -61,6 +56,8 @@ func (r Runner) ExecuteForOutput(cmdSlice []string, logCmdSlice ...[]string) (st
 		Stdout: &outputBuf,
 		Stderr: &outputBuf,
 	})
+
+	logSlice := secureCmd(cmdSlice)
 	r.Logger.Printf("=> %s", r.CmdFactory.Create(logSlice[0], logSlice[1:], nil).PrintableCommandArgs())
 
 	err := cmd.Run()
@@ -110,7 +107,7 @@ func NewHelper(runner Runner, pathChecker pathutil.PathChecker, keystorePth, key
 		"-J-Duser.language=en-US",
 	}
 
-	out, err := runner.ExecuteForOutput(cmdSlice, secureCmd(cmdSlice))
+	out, err := runner.ExecuteForOutput(cmdSlice)
 	if err != nil {
 		return Helper{}, properError(err, out)
 	}
@@ -184,7 +181,7 @@ func (helper Helper) SignBuildArtifact(buildArtifactPth, destBuildArtifactPth, p
 		return err
 	}
 
-	out, err := helper.runner.ExecuteForOutput(cmdSlice, secureCmd(cmdSlice))
+	out, err := helper.runner.ExecuteForOutput(cmdSlice)
 	if err != nil {
 		return properError(err, out)
 	}
