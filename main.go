@@ -11,12 +11,13 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-android/sdk"
-	"github.com/bitrise-io/go-steputils/stepconf"
-	"github.com/bitrise-io/go-steputils/tools"
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/errorutil"
-	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-steputils/v2/export"
+	"github.com/bitrise-io/go-steputils/v2/stepconf"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/env"
+	"github.com/bitrise-io/go-utils/v2/fileutil"
+	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
 	"github.com/bitrise-steplib/steps-sign-apk/keystore"
 )
 
@@ -78,6 +79,7 @@ func splitElements(list []string, sep string) (s []string) {
 	for _, e := range list {
 		s = append(s, strings.Split(e, sep)...)
 	}
+
 	return
 }
 
@@ -98,6 +100,7 @@ func parseAppList(list string) (apps []string) {
 			apps = append(apps, app)
 		}
 	}
+
 	return
 }
 
@@ -105,14 +108,14 @@ func parseAppList(list string) (apps []string) {
 // --- Functions
 // -----------------------
 
-func download(url, pth string) error {
+func download(logger log.Logger, url, pth string) error {
 	out, err := os.Create(pth)
 	if err != nil {
 		return err
 	}
 	defer func() {
 		if err := out.Close(); err != nil {
-			log.Warnf("Failed to close file: %s, error: %s", out, err)
+			logger.Warnf("Failed to close file: %s, error: %s", out, err)
 		}
 	}()
 
@@ -122,17 +125,18 @@ func download(url, pth string) error {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Warnf("Failed to close response body, error: %s", err)
+			logger.Warnf("Failed to close response body, error: %s", err)
 		}
 	}()
 
 	_, err = io.Copy(out, resp.Body)
+
 	return err
 }
 
-func listFilesInBuildArtifact(aapt, pth string) ([]string, error) {
+func listFilesInBuildArtifact(runner keystore.Runner, aapt, pth string) ([]string, error) {
 	cmdSlice := []string{aapt, "list", pth}
-	out, err := keystore.ExecuteForOutput(cmdSlice)
+	out, err := runner.ExecuteForOutput(cmdSlice)
 	if err != nil {
 		return []string{}, err
 	}
@@ -147,6 +151,7 @@ func filterMETAFiles(fileList []string) []string {
 			metaFiles = append(metaFiles, file)
 		}
 	}
+
 	return metaFiles
 }
 
@@ -160,24 +165,28 @@ func filterSigningFiles(fileList []string) []string {
 			}
 		}
 	}
+
 	return signingFiles
 }
 
-func removeFilesFromBuildArtifact(aapt, pth string, files []string) error {
+func removeFilesFromBuildArtifact(runner keystore.Runner, aapt, pth string, files []string) error {
 	cmdSlice := append([]string{aapt, "remove", pth}, files...)
 
-	prinatableCmd := command.PrintableCommandArgs(false, cmdSlice)
-	log.Printf("=> %s", prinatableCmd)
+	out, err := runner.ExecuteForOutput(cmdSlice)
+	if err != nil {
+		var exitErr *command.ExitStatusError
+		if errors.As(err, &exitErr) {
+			return errors.New(out)
+		}
 
-	out, err := keystore.ExecuteForOutput(cmdSlice)
-	if err != nil && errorutil.IsExitStatusError(err) {
-		return errors.New(out)
+		return err
 	}
-	return err
+
+	return nil
 }
 
-func isBuildArtifactSigned(aapt, pth string) (bool, error) {
-	filesInBuildArtifact, err := listFilesInBuildArtifact(aapt, pth)
+func isBuildArtifactSigned(runner keystore.Runner, aapt, pth string) (bool, error) {
+	filesInBuildArtifact, err := listFilesInBuildArtifact(runner, aapt, pth)
 	if err != nil {
 		return false, err
 	}
@@ -190,11 +199,12 @@ func isBuildArtifactSigned(aapt, pth string) (bool, error) {
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 
-func unsignBuildArtifact(aapt, pth string) error {
-	filesInBuildArtifact, err := listFilesInBuildArtifact(aapt, pth)
+func unsignBuildArtifact(runner keystore.Runner, logger log.Logger, aapt, pth string) error {
+	filesInBuildArtifact, err := listFilesInBuildArtifact(runner, aapt, pth)
 	if err != nil {
 		return err
 	}
@@ -203,11 +213,12 @@ func unsignBuildArtifact(aapt, pth string) error {
 	signingFiles := filterSigningFiles(metaFiles)
 
 	if len(signingFiles) == 0 {
-		log.Printf("Build Artifact is not signed")
+		logger.Printf("Build Artifact is not signed")
+
 		return nil
 	}
 
-	return removeFilesFromBuildArtifact(aapt, pth, signingFiles)
+	return removeFilesFromBuildArtifact(runner, aapt, pth, signingFiles)
 }
 
 func prettyBuildArtifactBasename(buildArtifactPth string) string {
@@ -215,25 +226,26 @@ func prettyBuildArtifactBasename(buildArtifactPth string) string {
 	buildArtifactExt := filepath.Ext(buildArtifactBasenameWithExt)
 	buildArtifactBasename := strings.TrimSuffix(buildArtifactBasenameWithExt, buildArtifactExt)
 	buildArtifactBasename = strings.TrimSuffix(buildArtifactBasename, "-unsigned")
+
 	return buildArtifactBasename
 }
 
-func failf(format string, v ...interface{}) {
-	log.Errorf(format, v)
+func failf(logger log.Logger, format string, v ...interface{}) {
+	logger.Errorf(format, v...)
 	os.Exit(1)
 }
 
-func handleDeprecatedInputs(cfg *configs) {
+func handleDeprecatedInputs(logger log.Logger, cfg *configs) {
 	if cfg.APKPath != "" {
-		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
+		logger.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (android_app) instead!")
 		cfg.BuildArtifactPath = cfg.APKPath
 	}
 }
 
-func validate(cfg configs) error {
+func validate(logger log.Logger, pathChecker pathutil.PathChecker, cfg configs) error {
 	buildArtifactPaths := parseAppList(cfg.BuildArtifactPath)
 	for _, buildArtifactPath := range buildArtifactPaths {
-		if exist, err := pathutil.IsPathExists(buildArtifactPath); err != nil {
+		if exist, err := pathChecker.IsPathExists(buildArtifactPath); err != nil {
 			return fmt.Errorf("failed to check if BuildArtifactPath exist at: %s, error: %s", buildArtifactPath, err)
 		} else if !exist {
 			return fmt.Errorf("BuildArtifactPath not exist at: %s", buildArtifactPath)
@@ -242,9 +254,10 @@ func validate(cfg configs) error {
 		artifactExt := path.Ext(buildArtifactPath)
 		signAAB := strings.EqualFold(artifactExt, ".aab")
 		if cfg.SignerTool == "apksigner" && signAAB {
-			failf("signer tool apksigner does not support signing AABs, please use automatic or jarsigner instead")
+			failf(logger, "signer tool apksigner does not support signing AABs, please use automatic or jarsigner instead")
 		}
 	}
+
 	return nil
 }
 
@@ -252,74 +265,84 @@ func validate(cfg configs) error {
 // --- Main
 // -----------------------
 func main() {
+	logger := log.NewLogger()
+	envRepo := env.NewRepository()
+	cmdFactory := command.NewFactory(envRepo)
+	pathChecker := pathutil.NewPathChecker()
+	pathModifier := pathutil.NewPathModifier()
+	pathProvider := pathutil.NewPathProvider()
+	fileManager := fileutil.NewFileManager()
+	exporter := export.NewExporter(cmdFactory, fileManager)
+	runner := keystore.NewRunner(logger, cmdFactory)
+
 	var cfg configs
-	if err := stepconf.Parse(&cfg); err != nil {
-		failf("Process config: failed to parse input: %s", err)
+	if err := stepconf.NewInputParser(envRepo).Parse(&cfg); err != nil {
+		failf(logger, "Process config: failed to parse input: %s", err)
 	}
 	pageAlignConfig := parsePageAlign(cfg.PageAlign)
 
 	stepconf.Print(cfg)
-	log.SetEnableDebugLog(cfg.VerboseLog)
-	handleDeprecatedInputs(&cfg)
+	logger.EnableDebugLog(cfg.VerboseLog)
+	handleDeprecatedInputs(logger, &cfg)
 	fmt.Println()
 
-	if err := validate(cfg); err != nil {
-		failf("Process config: failed to validate input: %s", err)
+	if err := validate(logger, pathChecker, cfg); err != nil {
+		failf(logger, "Process config: failed to validate input: %s", err)
 	}
 
 	// Download keystore
-	tmpDir, err := pathutil.NormalizedOSTempDirPath("bitrise-sign-build-artifact")
+	tmpDir, err := pathProvider.CreateTempDir("bitrise-sign-build-artifact")
 	if err != nil {
-		failf("Run: failed to create tmp dir: %s", err)
+		failf(logger, "Run: failed to create tmp dir: %s", err)
 	}
 
 	keystorePath := ""
 	if strings.HasPrefix(cfg.KeystoreURL, "file://") {
 		pth := strings.TrimPrefix(cfg.KeystoreURL, "file://")
 		var err error
-		keystorePath, err = pathutil.AbsPath(pth)
+		keystorePath, err = pathModifier.AbsPath(pth)
 		if err != nil {
-			failf("Run: failed to expand path (%s): %s", pth, err)
+			failf(logger, "Run: failed to expand path (%s): %s", pth, err)
 		}
 	} else {
-		log.Infof("Download keystore")
+		logger.Infof("Download keystore")
 		keystorePath = path.Join(tmpDir, "keystore.jks")
-		if err := download(cfg.KeystoreURL, keystorePath); err != nil {
-			failf("Run: failed to download keystore: %s", err)
+		if err := download(logger, cfg.KeystoreURL, keystorePath); err != nil {
+			failf(logger, "Run: failed to download keystore: %s", err)
 		}
 	}
-	log.Printf("using keystore at: %s", keystorePath)
+	logger.Printf("using keystore at: %s", keystorePath)
 
-	keystore, err := keystore.NewHelper(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias)
+	ks, err := keystore.NewHelper(runner, pathChecker, keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias)
 	if err != nil {
-		failf("Run: failed to create keystore helper: %s", err)
+		failf(logger, "Run: failed to create keystore helper: %s", err)
 	}
 	// ---
 
 	// Find Android tools
 	androidHome := os.Getenv("ANDROID_HOME")
-	log.Printf("android_home: %s", androidHome)
+	logger.Printf("android_home: %s", androidHome)
 
 	androidSDK, err := sdk.New(androidHome)
 	if err != nil {
-		failf("Run: failed to create SDK model: %s", err)
+		failf(logger, "Run: failed to create SDK model: %s", err)
 	}
 
 	aapt, err := androidSDK.LatestBuildToolPath("aapt")
 	if err != nil {
-		failf("Run: failed to find AAPT path: %s", err)
+		failf(logger, "Run: failed to find AAPT path: %s", err)
 	}
-	log.Printf("aapt: %s", aapt)
+	logger.Printf("aapt: %s", aapt)
 
 	zipalign, err := androidSDK.LatestBuildToolPath("zipalign")
 	if err != nil {
-		failf("Run: failed to find zipalign path: %s", err)
+		failf(logger, "Run: failed to find zipalign path: %s", err)
 	}
-	log.Printf("zipalign: %s", zipalign)
+	logger.Printf("zipalign: %s", zipalign)
 
-	apkSigner, err := NewKeystoreSignatureConfiguration(keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias, cfg.PrivateKeyPassword, cfg.DebuggablePermitted, cfg.SignerScheme)
+	apkSigner, err := NewKeystoreSignatureConfiguration(logger, cmdFactory, keystorePath, cfg.KeystorePassword, cfg.KeystoreAlias, cfg.PrivateKeyPassword, cfg.DebuggablePermitted, cfg.SignerScheme)
 	if err != nil {
-		failf("Run: failed to create signature configuration: %s", err)
+		failf(logger, "Run: failed to create signature configuration: %s", err)
 	}
 	// ---
 
@@ -329,17 +352,17 @@ func main() {
 	signedAABPaths := make([]string, 0)
 
 	fmt.Println()
-	log.Infof("Signing %d Build Artifacts", len(buildArtifactPaths))
+	logger.Infof("Signing %d Build Artifacts", len(buildArtifactPaths))
 
 	if len(buildArtifactPaths) > 1 && cfg.OutputName != "" {
-		log.Warnf("output_name is set and more than one artifact found, disabling artifact renaming as it would result in overwriting exported artifacts")
+		logger.Warnf("output_name is set and more than one artifact found, disabling artifact renaming as it would result in overwriting exported artifacts")
 		fmt.Println()
 		cfg.OutputName = ""
 	}
 
 	for i, buildArtifactPath := range buildArtifactPaths {
 		artifactExt := path.Ext(buildArtifactPath)
-		log.Donef("%d/%d signing %s", i+1, len(buildArtifactPaths), buildArtifactPath)
+		logger.Donef("%d/%d signing %s", i+1, len(buildArtifactPaths), buildArtifactPath)
 		fmt.Println()
 
 		buildArtifactDir := path.Dir(buildArtifactPath)
@@ -347,8 +370,8 @@ func main() {
 
 		// unsign build artifact
 		unsignedBuildArtifactPth := filepath.Join(tmpDir, "unsigned"+artifactExt)
-		if err := command.CopyFile(buildArtifactPath, unsignedBuildArtifactPth); err != nil {
-			failf("Run: failed to copy build artifact: %s", err)
+		if err := fileManager.CopyFile(buildArtifactPath, unsignedBuildArtifactPth, &fileutil.CopyOptions{Overwrite: true}); err != nil {
+			failf(logger, "Run: failed to copy build artifact: %s", err)
 		}
 
 		signAAB := strings.EqualFold(artifactExt, ".aab")
@@ -362,30 +385,30 @@ func main() {
 		}
 
 		if signerTool == string(jarsignerSignerTool) {
-			isSigned, err := isBuildArtifactSigned(aapt, unsignedBuildArtifactPth)
+			isSigned, err := isBuildArtifactSigned(runner, aapt, unsignedBuildArtifactPth)
 			if err != nil {
-				failf("Run: failed to check if build artifact is signed: %s", err)
+				failf(logger, "Run: failed to check if build artifact is signed: %s", err)
 			}
 
 			if isSigned {
-				log.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the build artifact...")
-				if err := unsignBuildArtifact(aapt, unsignedBuildArtifactPth); err != nil {
-					failf("Run: failed to un-sign Build Artifact: %s", err)
+				logger.Printf("Signature file (DSA or RSA) found in META-INF, unsigning the build artifact...")
+				if err := unsignBuildArtifact(runner, logger, aapt, unsignedBuildArtifactPth); err != nil {
+					failf(logger, "Run: failed to un-sign Build Artifact: %s", err)
 				}
 				fmt.Println()
 			} else {
-				log.Printf("No signature file (DSA or RSA) found in META-INF, skipping build artifact unsign...")
+				logger.Printf("No signature file (DSA or RSA) found in META-INF, skipping build artifact unsign...")
 				fmt.Println()
 			}
 		} else {
-			log.Printf("Skipping removal of existing signature as apksigner can re-sign already signed apk.")
+			logger.Printf("Skipping removal of existing signature as apksigner can re-sign already signed apk.")
 		}
 
 		var fullPath string
 		if signerTool == string(apksignerSignerTool) {
-			fullPath = signAPK(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.OutputName, apkSigner, pageAlignConfig)
+			fullPath = signAPK(logger, runner, fileManager, zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.OutputName, apkSigner, pageAlignConfig)
 		} else {
-			fullPath = signJarSigner(zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, keystore, pageAlignConfig)
+			fullPath = signJarSigner(logger, runner, fileManager, zipalign, tmpDir, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, cfg.PrivateKeyPassword, cfg.OutputName, ks, pageAlignConfig)
 		}
 
 		if signAAB {
@@ -403,110 +426,114 @@ func main() {
 
 	// APK
 	if len(signedAPKPaths) > 0 {
-		exportAPK(signedAPKPaths, joinedAPKOutputPaths)
+		exportAPK(logger, &exporter, signedAPKPaths, joinedAPKOutputPaths)
 	} else {
-		log.Debugf("No Signed APK was exported - skip BITRISE_SIGNED_APK_PATH Environment Variable export")
-		log.Debugf("No Signed APK was exported - skip BITRISE_SIGNED_APK_PATH_LIST Environment Variable export")
+		logger.Debugf("No Signed APK was exported - skip BITRISE_SIGNED_APK_PATH Environment Variable export")
+		logger.Debugf("No Signed APK was exported - skip BITRISE_SIGNED_APK_PATH_LIST Environment Variable export")
 	}
 
 	// AAB
 	if len(signedAABPaths) > 0 {
-		exportAAB(signedAABPaths, joinedAABOutputPaths)
+		exportAAB(logger, &exporter, signedAABPaths, joinedAABOutputPaths)
 	} else {
-		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH Environment Variable export")
-		log.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH_LIST Environment Variable export")
+		logger.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH Environment Variable export")
+		logger.Debugf("No Signed AAB was exported - skip BITRISE_SIGNED_AAB_PATH_LIST Environment Variable export")
 	}
 }
 
-func signJarSigner(zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, privateKeyPassword string, outputName string, keystore keystore.Helper, pageAlignConfig pageAlignStatus) string {
+func signJarSigner(logger log.Logger, runner keystore.Runner, fileManager fileutil.FileManager, zipalign, tmpDir string, unsignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, privateKeyPassword string, outputName string, ks keystore.Helper, pageAlignConfig pageAlignStatus) string {
 	// sign build artifact
 	unalignedBuildArtifactPth := filepath.Join(tmpDir, "unaligned"+artifactExt)
-	log.Infof("Sign Build Artifact with Jarsigner: %s", unsignedBuildArtifactPth)
-	if err := keystore.SignBuildArtifact(unsignedBuildArtifactPth, unalignedBuildArtifactPth, privateKeyPassword); err != nil {
-		failf("Run: failed to sign Build Artifact: %s", err)
+	logger.Infof("Sign Build Artifact with Jarsigner: %s", unsignedBuildArtifactPth)
+	if err := ks.SignBuildArtifact(unsignedBuildArtifactPth, unalignedBuildArtifactPth, privateKeyPassword); err != nil {
+		failf(logger, "Run: failed to sign Build Artifact: %s", err)
 	}
 	fmt.Println()
 
-	log.Infof("Verify Build Artifact")
-	if err := keystore.VerifyBuildArtifact(unalignedBuildArtifactPth); err != nil {
-		failf("Run: failed to verify Build Artifact: %s", err)
+	logger.Infof("Verify Build Artifact")
+	if err := ks.VerifyBuildArtifact(unalignedBuildArtifactPth); err != nil {
+		failf(logger, "Run: failed to verify Build Artifact: %s", err)
 	}
 	fmt.Println()
 
-	fullPath, err := zipAlignArtifact(zipalign, unalignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "signed", outputName, pageAlignConfig)
+	fullPath, err := zipAlignArtifact(runner, logger, fileManager, zipalign, unalignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "signed", outputName, pageAlignConfig)
 	if err != nil {
-		failf("Run: failed to zipalign Build Artifact: %s", err)
+		failf(logger, "Run: failed to zipalign Build Artifact: %s", err)
 	}
 
 	return fullPath
 }
 
-func signAPK(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, outputName string, apkSigner SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
-	alignedPath, err := zipAlignArtifact(zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "aligned", "", pageAlignConfig)
+func signAPK(logger log.Logger, runner keystore.Runner, fileManager fileutil.FileManager, zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, outputName string, apkSigner SignatureConfiguration, pageAlignConfig pageAlignStatus) string {
+	alignedPath, err := zipAlignArtifact(runner, logger, fileManager, zipalign, unsignedBuildArtifactPth, buildArtifactDir, buildArtifactBasename, artifactExt, "aligned", "", pageAlignConfig)
 	if err != nil {
-		failf("Run: failed to zipalign Build Artifact: %s", err)
+		failf(logger, "Run: failed to zipalign Build Artifact: %s", err)
 	}
 
 	signedArtifactName := fmt.Sprintf("%s-bitrise-signed%s", buildArtifactBasename, artifactExt)
 	if artifactName := fmt.Sprintf("%s%s", outputName, artifactExt); outputName != "" {
-		log.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
+		logger.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
 		signedArtifactName = artifactName
 	}
 	fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
 
 	fmt.Println()
-	log.Infof("Sign Build Artifact with APKSigner: %s", alignedPath)
+	logger.Infof("Sign Build Artifact with APKSigner: %s", alignedPath)
 	err = apkSigner.SignBuildArtifact(alignedPath, fullPath)
 	if err != nil {
-		failf("Run: failed to build artifact: %s", err)
+		failf(logger, "Run: failed to build artifact: %s", err)
 	}
 
 	fmt.Println()
-	log.Infof("Verify Build Artifact")
+	logger.Infof("Verify Build Artifact")
 	err = apkSigner.VerifyBuildArtifact(fullPath)
 	if err != nil {
-		failf("Run: failed to build artifact: %s", err)
+		failf(logger, "Run: failed to build artifact: %s", err)
 	}
 
 	return fullPath
 }
 
-func exportAPK(signedAPKPaths []string, joinedAPKOutputPaths string) {
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH", signedAPKPaths[len(signedAPKPaths)-1]); err != nil {
-		log.Warnf("Failed to export APK (%s) error: %s", signedAPKPaths[len(signedAPKPaths)-1], err)
+func exportAPK(logger log.Logger, exporter *export.Exporter, signedAPKPaths []string, joinedAPKOutputPaths string) {
+	last := signedAPKPaths[len(signedAPKPaths)-1]
+
+	if err := exporter.ExportOutput("BITRISE_SIGNED_APK_PATH", last); err != nil {
+		logger.Warnf("Failed to export APK (%s) error: %s", last, err)
 	} else {
-		log.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", signedAPKPaths[len(signedAPKPaths)-1])
+		logger.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH (value: %s)", last)
 	}
 
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_APK_PATH_LIST", joinedAPKOutputPaths); err != nil {
-		log.Warnf("Failed to export APK list (%s), error: %s", joinedAPKOutputPaths, err)
+	if err := exporter.ExportOutput("BITRISE_SIGNED_APK_PATH_LIST", joinedAPKOutputPaths); err != nil {
+		logger.Warnf("Failed to export APK list (%s), error: %s", joinedAPKOutputPaths, err)
 	} else {
-		log.Donef("The Signed APK path list is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH_LIST (value: %s)", joinedAPKOutputPaths)
+		logger.Donef("The Signed APK path list is now available in the Environment Variable: BITRISE_SIGNED_APK_PATH_LIST (value: %s)", joinedAPKOutputPaths)
 	}
 
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_APK_PATH", joinedAPKOutputPaths); err != nil {
-		log.Warnf("Failed to export APK list (%s), error: %s", joinedAPKOutputPaths, err)
+	if err := exporter.ExportOutput("BITRISE_APK_PATH", joinedAPKOutputPaths); err != nil {
+		logger.Warnf("Failed to export APK list (%s), error: %s", joinedAPKOutputPaths, err)
 	} else {
-		log.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_APK_PATH (value: %s)", joinedAPKOutputPaths)
+		logger.Donef("The Signed APK path is now available in the Environment Variable: BITRISE_APK_PATH (value: %s)", joinedAPKOutputPaths)
 	}
 }
 
-func exportAAB(signedAABPaths []string, joinedAABOutputPaths string) {
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH", signedAABPaths[len(signedAABPaths)-1]); err != nil {
-		log.Warnf("Failed to export AAB (%s), error: %s", signedAABPaths[len(signedAABPaths)-1], err)
+func exportAAB(logger log.Logger, exporter *export.Exporter, signedAABPaths []string, joinedAABOutputPaths string) {
+	last := signedAABPaths[len(signedAABPaths)-1]
+
+	if err := exporter.ExportOutput("BITRISE_SIGNED_AAB_PATH", last); err != nil {
+		logger.Warnf("Failed to export AAB (%s), error: %s", last, err)
 	} else {
-		log.Donef("The Signed AAB path is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH (value: %s)", signedAABPaths[len(signedAABPaths)-1])
+		logger.Donef("The Signed AAB path is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH (value: %s)", last)
 	}
 
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_SIGNED_AAB_PATH_LIST", joinedAABOutputPaths); err != nil {
-		log.Warnf("Failed to export AAB list (%s), error: %s", joinedAABOutputPaths, err)
+	if err := exporter.ExportOutput("BITRISE_SIGNED_AAB_PATH_LIST", joinedAABOutputPaths); err != nil {
+		logger.Warnf("Failed to export AAB list (%s), error: %s", joinedAABOutputPaths, err)
 	} else {
-		log.Donef("The Signed AAB path list is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH_LIST (value: %s)", joinedAABOutputPaths)
+		logger.Donef("The Signed AAB path list is now available in the Environment Variable: BITRISE_SIGNED_AAB_PATH_LIST (value: %s)", joinedAABOutputPaths)
 	}
 
-	if err := tools.ExportEnvironmentWithEnvman("BITRISE_AAB_PATH", joinedAABOutputPaths); err != nil {
-		log.Warnf("Failed to export AAB list (%s), error: %s", joinedAABOutputPaths, err)
+	if err := exporter.ExportOutput("BITRISE_AAB_PATH", joinedAABOutputPaths); err != nil {
+		logger.Warnf("Failed to export AAB list (%s), error: %s", joinedAABOutputPaths, err)
 	} else {
-		log.Donef("The Signed AAB path is now available in the Environment Variable: BITRISE_AAB_PATH (value: %s)", joinedAABOutputPaths)
+		logger.Donef("The Signed AAB path is now available in the Environment Variable: BITRISE_AAB_PATH (value: %s)", joinedAABOutputPaths)
 	}
 }

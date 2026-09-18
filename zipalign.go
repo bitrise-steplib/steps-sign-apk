@@ -5,30 +5,32 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/v2/fileutil"
+	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-steplib/steps-sign-apk/keystore"
 )
 
-func zipalignBuildArtifact(zipalignConfig *zipalignConfiguration, artifactPath, dstPath string) error {
+func zipalignBuildArtifact(zipalignConfig *zipalignConfiguration, fileManager fileutil.FileManager, artifactPath, dstPath string) error {
 	aligned, err := zipalignConfig.checkAlignment(artifactPath)
 	if err != nil {
 		return err
 	}
 	if aligned {
-		if err := command.CopyFile(artifactPath, dstPath); err != nil {
+		if err := fileManager.CopyFile(artifactPath, dstPath, &fileutil.CopyOptions{Overwrite: true}); err != nil {
 			return fmt.Errorf("failed to copy build artifact: %s", err)
 		}
+
 		return nil
 	}
 
 	return zipalignConfig.zipalignArtifact(artifactPath, dstPath)
 }
 
-func zipAlignArtifact(zipalignPath, unalignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, fullPathExt string, outputName string, pageAlignConfig pageAlignStatus) (string, error) {
-	log.Infof("Zipalign Build Artifact")
+func zipAlignArtifact(runner keystore.Runner, logger log.Logger, fileManager fileutil.FileManager, zipalignPath, unalignedBuildArtifactPth string, buildArtifactDir string, buildArtifactBasename string, artifactExt string, fullPathExt string, outputName string, pageAlignConfig pageAlignStatus) (string, error) {
+	logger.Infof("Zipalign Build Artifact")
 	signedArtifactName := fmt.Sprintf("%s-bitrise-%s%s", buildArtifactBasename, fullPathExt, artifactExt)
 	if artifactName := fmt.Sprintf("%s%s", outputName, artifactExt); outputName != "" {
-		log.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
+		logger.Printf("- Exporting (%s) as: %s", signedArtifactName, artifactName)
 		signedArtifactName = artifactName
 	}
 	fullPath := filepath.Join(buildArtifactDir, signedArtifactName)
@@ -38,13 +40,17 @@ func zipAlignArtifact(zipalignPath, unalignedBuildArtifactPth string, buildArtif
 	if !strings.EqualFold(artifactExt, ".aab") && pageAlignConfig == pageAlignAuto {
 		extractNativeLibs, err := parseAPKextractNativeLibs(unalignedBuildArtifactPth)
 		if err != nil {
-			log.Warnf("Failed to parse APK manifest to read extractNativeLibs attribute: %s", err)
+			logger.Warnf("Failed to parse APK manifest to read extractNativeLibs attribute: %s", err)
 			isPageAligned = true
 		} else {
 			isPageAligned = !extractNativeLibs
 		}
 	}
 
-	return fullPath, zipalignBuildArtifact(newZipalignConfiguration(zipalignPath, isPageAligned),
-		unalignedBuildArtifactPth, fullPath)
+	return fullPath, zipalignBuildArtifact(
+		newZipalignConfiguration(runner, logger, zipalignPath, isPageAligned),
+		fileManager,
+		unalignedBuildArtifactPth,
+		fullPath,
+	)
 }

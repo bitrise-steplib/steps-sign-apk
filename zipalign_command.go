@@ -1,19 +1,24 @@
 package main
 
 import (
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/errorutil"
-	"github.com/bitrise-io/go-utils/log"
+	"errors"
+
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-sign-apk/keystore"
 )
 
 type zipalignConfiguration struct {
+	runner       keystore.Runner
+	logger       log.Logger
 	zipalignPath string
 	pageAlign    bool
 }
 
-func newZipalignConfiguration(zipalignPath string, pageAlign bool) *zipalignConfiguration {
+func newZipalignConfiguration(runner keystore.Runner, logger log.Logger, zipalignPath string, pageAlign bool) *zipalignConfiguration {
 	return &zipalignConfiguration{
+		runner:       runner,
+		logger:       logger,
 		zipalignPath: zipalignPath,
 		pageAlign:    pageAlign,
 	}
@@ -26,15 +31,18 @@ func (config *zipalignConfiguration) checkAlignment(artifactPath string) (bool, 
 	}
 	checkCmdSlice = append(checkCmdSlice, "-c", "4", artifactPath)
 
-	err := keystore.Execute(checkCmdSlice)
+	err := config.runner.Execute(checkCmdSlice)
 	if err != nil {
-		if errorutil.IsExitStatusError(err) {
+		var exitErr *command.ExitStatusError
+		if errors.As(err, &exitErr) {
 			return false, nil
 		}
+
 		return false, err
 	}
 
-	log.Printf("Artifact alignment confirmed.")
+	config.logger.Printf("Artifact alignment confirmed.")
+
 	return true, nil
 }
 
@@ -44,8 +52,8 @@ func (config *zipalignConfiguration) zipalignArtifact(artifactPath, dstPath stri
 		cmdSlice = append(cmdSlice, "-p")
 	}
 	cmdSlice = append(cmdSlice, "-f", "4", artifactPath, dstPath)
-	log.Printf("=> %s", command.PrintableCommandArgs(false, cmdSlice))
 
-	_, err := keystore.ExecuteForOutput(cmdSlice)
+	_, err := config.runner.ExecuteForOutput(cmdSlice)
+
 	return err
 }

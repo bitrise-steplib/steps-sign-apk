@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/bitrise-io/go-android/sdk"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
 // SignatureType ..
@@ -30,6 +32,8 @@ type SignatureConfiguration struct {
 	debuggablePermitted   string
 	signatureType         SignatureType
 	keystoreConfiguration *KeystoreSignatureConfiguration
+	logger                log.Logger
+	cmdFactory            command.Factory
 }
 
 func buildAPKSignerPath() (string, error) {
@@ -40,7 +44,6 @@ func buildAPKSignerPath() (string, error) {
 	}
 
 	signer, err := androidSDK.LatestBuildToolPath("apksigner")
-
 	if err != nil {
 		return "", fmt.Errorf("failed to create sdk model: %s", err)
 	}
@@ -49,9 +52,8 @@ func buildAPKSignerPath() (string, error) {
 }
 
 // NewKeystoreSignatureConfiguration ...
-func NewKeystoreSignatureConfiguration(keystore string, keystorePassword string, alias string, aliasPassword string, debuggablePermitted string, signerScheme string) (SignatureConfiguration, error) {
+func NewKeystoreSignatureConfiguration(logger log.Logger, cmdFactory command.Factory, keystore string, keystorePassword string, alias string, aliasPassword string, debuggablePermitted string, signerScheme string) (SignatureConfiguration, error) {
 	apkSigner, err := buildAPKSignerPath()
-
 	if err != nil {
 		return SignatureConfiguration{}, err
 	}
@@ -69,5 +71,7 @@ func NewKeystoreSignatureConfiguration(keystore string, keystorePassword string,
 		signerScheme:          signerScheme,
 		signatureType:         KeystoreSignatureType,
 		keystoreConfiguration: &keystoreConfig,
+		logger:                logger,
+		cmdFactory:            cmdFactory,
 	}, nil
 }

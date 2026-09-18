@@ -1,35 +1,51 @@
 # github.com/avast/apkparser v0.0.0-20210301101811-6256c76f738e
-## explicit
+## explicit; go 1.10
 github.com/avast/apkparser
 # github.com/bitrise-io/go-android v0.0.0-20210527143215-3ad22ad02e2e
-## explicit
+## explicit; go 1.16
 github.com/bitrise-io/go-android/sdk
-# github.com/bitrise-io/go-steputils v0.0.0-20210527075147-910ce7a105a1
-## explicit
-github.com/bitrise-io/go-steputils/stepconf
-github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20210713111255-08be784d45d0
-## explicit
-github.com/bitrise-io/go-utils/colorstring
+# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.50
+## explicit; go 1.21
+github.com/bitrise-io/go-steputils/v2/export
+github.com/bitrise-io/go-steputils/v2/stepconf
+# github.com/bitrise-io/go-utils v1.0.13
+## explicit; go 1.13
 github.com/bitrise-io/go-utils/command
-github.com/bitrise-io/go-utils/command/git
-github.com/bitrise-io/go-utils/errorutil
-github.com/bitrise-io/go-utils/log
-github.com/bitrise-io/go-utils/parseutil
 github.com/bitrise-io/go-utils/pathutil
-github.com/bitrise-io/go-utils/pointers
+github.com/bitrise-io/go-utils/ziputil
+# github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.34
+## explicit; go 1.21
+github.com/bitrise-io/go-utils/v2/command
+github.com/bitrise-io/go-utils/v2/env
+github.com/bitrise-io/go-utils/v2/filedownloader
+github.com/bitrise-io/go-utils/v2/fileutil
+github.com/bitrise-io/go-utils/v2/log
+github.com/bitrise-io/go-utils/v2/log/colorstring
+github.com/bitrise-io/go-utils/v2/parseutil
+github.com/bitrise-io/go-utils/v2/pathutil
+github.com/bitrise-io/go-utils/v2/retryhttp
 # github.com/davecgh/go-spew v1.1.1
-github.com/davecgh/go-spew/spew
-# github.com/hashicorp/go-version v1.3.0
-github.com/hashicorp/go-version
-# github.com/klauspost/compress v1.13.2
 ## explicit
+github.com/davecgh/go-spew/spew
+# github.com/hashicorp/go-cleanhttp v0.5.2
+## explicit; go 1.13
+github.com/hashicorp/go-cleanhttp
+# github.com/hashicorp/go-retryablehttp v0.7.7
+## explicit; go 1.19
+github.com/hashicorp/go-retryablehttp
+# github.com/hashicorp/go-version v1.3.0
+## explicit
+github.com/hashicorp/go-version
+# github.com/klauspost/compress v1.17.8
+## explicit; go 1.20
 github.com/klauspost/compress/flate
 # github.com/pmezard/go-difflib v1.0.0
-github.com/pmezard/go-difflib/difflib
-# github.com/stretchr/testify v1.7.0
 ## explicit
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/testify v1.9.0
+## explicit; go 1.17
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
 gopkg.in/yaml.v3
